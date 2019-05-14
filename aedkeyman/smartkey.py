@@ -168,6 +168,17 @@ class SmartKey(object):
 
         return keys
 
+    def list_accounts(self):
+        """
+        List the accounts.
+        """
+        res = self._request('GET', "/sys/v1/accounts")
+        if res.status_code != requests.codes.ok:
+            msg = "%d %s" % (res.status_code, res.text)
+            raise SmartKeyException(msg)
+
+        return res.json()
+
     def list_groups(self):
         """
         List the groups.

@@ -127,8 +127,17 @@ def cmd_skey_login(args):
     print ("Session will expire in %s. Use the 'skey-logout' command to " +
            "terminate it sooner.") % (timedelta(seconds=ttl),)
 
+    # Select the account to use. Sometimes this is required.
+    # TODO: Make auto_account_id the default behavior?
+    if args.auto_account_id:
+        accounts = ska.list_accounts()
+        if len(accounts) > 1:
+            logging.warn("Multiple accounts available, using the first one")
+        acid = accounts[0]['acct_id']
+        logging.debug("Selecting account %s" % acid)
+        output_and_exit(ska.select_account(acid))
+
     if args.account_id is not None:
-        # Select the account to use. Sometimes this is required.
         logging.debug("Selecting account %s" % args.account_id)
         output_and_exit(ska.select_account(args.account_id))
 
@@ -235,6 +244,11 @@ def cmd_skey_export_key(args):
     if (not args.out_file and not args.out_priv_file and
             not args.out_pub_file):
         print blob
+
+
+def cmd_skey_list_accounts(args):
+    ska = SmartKey(**get_skey_kwargs(args))
+    output_and_exit(ska.list_accounts())
 
 
 def cmd_skey_list_groups(args):
@@ -686,6 +700,7 @@ def main():
     subp.add_argument('--update-aed', action='store_true',
                       help="also push the key to AED")
 
+    subp = register_cmd('skey-list-accounts', help="list accounts on SmartKey")
     subp = register_cmd('skey-list-groups', help="list groups on SmartKey")
 
     subp = register_cmd('skey-list-keys',
@@ -699,8 +714,11 @@ def main():
                       help="username to login with")
     subp.add_argument('--password', type=str, metavar='PASSWORD',
                       help="password for authentication")
-    subp.add_argument('--account-id', type=str, metavar='UUID',
-                      help="select a specific account ID")
+    groupp = subp.add_mutually_exclusive_group()
+    groupp.add_argument('--account-id', type=str, metavar='UUID',
+                        help="select a specific account ID")
+    groupp.add_argument('--auto-account-id', action='store_true',
+                        help="")
 
     subp = register_cmd('skey-logout',
                         help="terminate session with SmartKey")
