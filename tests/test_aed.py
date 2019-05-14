@@ -145,7 +145,8 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
         body = {'privateKey': priv, 'certificate': None, 'label': 'newrsa'}
 
         mpost.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/',
-                                 headers=HEADERS, json=body)
+                                 headers=HEADERS, json=body,
+                                 verify=True)
 
     @patch('aedkeyman.aed.requests.post')
     def test_import_rsa_key_fail(self, mpost):
@@ -199,7 +200,8 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
         body = {'privateKey': priv, 'certificate': None, 'label': 'newrsa'}
 
         mpost.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/',
-                                 headers=HEADERS, json=body)
+                                 headers=HEADERS, json=body,
+                                 verify=True)
 
     @patch('aedkeyman.aed.requests.get')
     def test_list_keys_success(self, mget):
@@ -241,7 +243,8 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
         mget.return_value = mresp
         actual_rdata = aed.list_keys()
         mget.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/',
-                                headers=HEADERS, params=req_data)
+                                headers=HEADERS, params=req_data,
+                                verify=True)
         expected_rdata = [
             {
                 "name": "firstec",
@@ -298,7 +301,8 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
         with self.assertRaises(aedkeyman.ArborEdgeDefenseException):
             aed.list_keys()
         mget.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/',
-                                headers=HEADERS, params=req_data)
+                                headers=HEADERS, params=req_data,
+                                verify=True)
 
     @patch('aedkeyman.aed.requests.delete')
     def test_delete_key_success(self, mdel):
@@ -310,7 +314,7 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
         mdel.return_value = mresp
         aed.delete_key('newrsa')
         mdel.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/newrsa',
-                                headers=HEADERS)
+                                headers=HEADERS, verify=True)
 
     @patch('aedkeyman.aed.requests.delete')
     def test_delete_key_fail(self, mdel):
@@ -334,7 +338,7 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
             aed.delete_key('test')
 
         mdel.assert_called_with(url=BASE_URL + 'v2/hsm/certificates/test',
-                                headers=HEADERS)
+                                headers=HEADERS, verify=True)
 
 
 if __name__ == '__main__':

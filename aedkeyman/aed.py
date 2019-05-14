@@ -24,11 +24,13 @@ class ArborEdgeDefense(object):
     """
     Manage Keys on AED.
     """
-    def __init__(self, hostname, token, hsm_user, hsm_pass):
+    def __init__(self, hostname, token, hsm_user, hsm_pass,
+                 disable_cert_verify=False):
         self.token = token
         self.hsm_user = hsm_user
         self.hsm_pass = hsm_pass
         self.baseurl = 'https://%s/api/aps/v2' % (hostname,)
+        self.verify = not disable_cert_verify
 
     def import_key(self, name, priv, cert=None):
         body = {
@@ -92,13 +94,15 @@ class ArborEdgeDefense(object):
             if method == 'POST':
                 result = requests.post(url=self.baseurl + url_suffix,
                                        headers=headers,
-                                       json=data)
+                                       json=data,
+                                       verify=self.verify)
             elif method == 'GET':
                 result = requests.get(url=self.baseurl + url_suffix,
-                                      headers=headers, params=data)
+                                      headers=headers, params=data,
+                                      verify=self.verify)
             elif method == 'DELETE':
                 result = requests.delete(url=self.baseurl + url_suffix,
-                                         headers=headers)
+                                         headers=headers, verify=self.verify)
         except ConnectionError, exc:
             # TODO: should clean this up
             raise ArborEdgeDefenseException(str(exc))

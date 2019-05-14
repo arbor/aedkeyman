@@ -103,7 +103,12 @@ def get_aed_args(args):
         raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto" +
                                      "user password for Arbor AED")
 
-    return (hostname, token, hsm_user, hsm_pass,)
+    if os.getenv('AED_DISABLE_CERT_VERIFY', 'false') == 'true':
+        disable_cert_verify = True
+    else:
+        disable_cert_verify = False
+
+    return (hostname, token, hsm_user, hsm_pass, disable_cert_verify)
 
 
 def cmd_skey_login(args):
