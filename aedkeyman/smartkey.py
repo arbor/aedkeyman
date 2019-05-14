@@ -159,12 +159,6 @@ class SmartKey(object):
 
         data = []
         keys = res.json()
-        for key in keys:
-            # XXX- Need to fix AED so it's returning PKCS#7
-            if key['obj_type'] == 'RSA' or key['obj_type'] == 'EC':
-                pub = key['pub_key']
-                pub = pub[32:]
-                key['pub_key'] = pub
 
         return keys
 
@@ -217,13 +211,8 @@ class SmartKey(object):
             raise SmartKeyException(msg)
 
         data = res.json()
-        # XXX- this is a workaround for a bug in SmartKey. The first 32
-        # bytes of pub_key always appear to be junk.
-        if data['obj_type'] == 'RSA' or data['obj_type'] == 'EC':
-            pub = data['pub_key']
-            pub = pub[32:]
-            data['pub_key'] = pub
         logging.debug(pprint.pformat(data))
+
         return data
 
     def auth_app(self, save=True):

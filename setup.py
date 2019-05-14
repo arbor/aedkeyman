@@ -20,6 +20,6 @@ setup(
         'console_scripts': ['aedkeyman=aedkeyman.command_line:main'],
     },
     install_requires=[
-        'requests',
+        'requests', 'asn1'
     ],
 )

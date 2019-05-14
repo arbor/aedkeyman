@@ -9,3 +9,4 @@ from .smartkey import (SmartKey, SmartKeyException,
                        SmartKeyNeedsAuthException,
                        SmartKeyNeedsAcctSelectException,
                        SmartKeyAuthUserException)
+from .util import pkcs8_to_pub

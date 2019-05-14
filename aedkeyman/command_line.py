@@ -1,4 +1,3 @@
-#!/usr/bin/env python2.7
 #
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
 # All rights reserved.  Proprietary and confidential.
@@ -21,7 +20,8 @@ from aedkeyman import (MissingConfigException,
                        SmartKey, SmartKeyException,
                        SmartKeyNeedsAuthException,
                        SmartKeyNeedsAcctSelectException,
-                       SmartKeyAuthUserException)
+                       SmartKeyAuthUserException,
+                       pkcs8_to_pub)
 
 
 # How much to indent hierarchical output
@@ -70,7 +70,7 @@ def get_skey_kwargs(args):
     # the user.
     #
     kwargs = {
-        'apikey': os.environ.get('SKEY_API_KEY', None)
+        'apikey': os.getenv('SKEY_API_KEY')
     }
     return kwargs
 
@@ -441,13 +441,12 @@ def cmd_skey_sync_keys(args):
                           (name,))
             continue
 
-        pub = key['pub_key']
+        pub = pkcs8_to_pub(key['pub_key'])
         if pub in aedpubs:
             logging.debug("key %s already on AED" % (name,))
-            print "key %s already on AED" % (name,)
             continue
         else:
-            print "key %s not on AED" % (name,)
+            logging.debug("key %s not on AED" % (name,))
 
         kid = key['kid']
         if ktype == 'RSA':
@@ -459,7 +458,8 @@ def cmd_skey_sync_keys(args):
                 continue
 
             if pub != data['pub_key']:
-                output_and_exit("Public mismatch during export", error=True)
+                logging.warn("Public mismatch during export on key %s" %
+                             name)
 
             priv = wrap_text_begin_end("RSA PRIVATE KEY", data['value'])
         elif ktype == 'EC':
