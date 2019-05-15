@@ -413,7 +413,8 @@ def cmd_skey_list_keys(args):
             inakey = 'YES'
             ktype = akeym[name]['type']
 
-        print "%50s %-12s %-3s      %s" % (name, ktype, inskey, inakey)
+        fname = "%s %s" % (name, '.' * (49 - len(name)))
+        print "%-50s %-12s %-3s      %s" % (fname, ktype, inskey, inakey)
 
 
 def cmd_skey_sync_keys(args):
