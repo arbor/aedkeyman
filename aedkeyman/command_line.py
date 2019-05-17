@@ -13,15 +13,15 @@ import getpass
 import logging
 import os
 import sys
-import subprocess
-
 from aedkeyman import (MissingConfigException,
                        ArborEdgeDefense, ArborEdgeDefenseException,
                        SmartKey, SmartKeyException,
                        SmartKeyNeedsAuthException,
                        SmartKeyNeedsAcctSelectException,
                        SmartKeyAuthUserException,
-                       pkcs8_to_pub)
+                       pkcs8_to_pub,
+                       get_ec_pem,
+                       get_elliptic_curves)
 
 
 # How much to indent hierarchical output
@@ -29,35 +29,6 @@ indent_step = 2
 
 # Global count of the number of errors that have occurred.
 error_count = 0
-
-skey_to_openssl_ecnames = {
-    'SecP192K1': 'secp192k1',
-    'SecP224K1': 'secp224k1',
-    'SecP256K1': 'secp256k1',
-    'NistP192': 'prime192v1',
-    'NistP224': 'secp224r1',
-    'NistP256': 'prime256v1',
-    'NistP384': 'secp384r1',
-    'NistP521': 'secp521r1',
-}
-
-elliptic_curves = skey_to_openssl_ecnames.keys()
-
-
-def get_elliptic_curves():
-    return elliptic_curves
-
-
-def get_ec_pem(skey_ecname):
-    """
-    Given a curve name from SmartKey return a PEM blob (including BEGIN
-    and END)
-    """
-    oname = skey_to_openssl_ecnames[skey_ecname]
-
-    output = subprocess.check_output(['openssl', 'ecparam', '-name', oname])
-
-    return output.strip()
 
 
 def get_skey_kwargs(args):

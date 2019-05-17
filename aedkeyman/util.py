@@ -3,12 +3,43 @@
 # All rights reserved.  Proprietary and confidential.
 #
 
-""" ASN1 Utilities
+""" Misc helpers
 """
 
 import asn1
 import base64
 import binascii
+import subprocess
+
+
+skey_to_openssl_ecnames = {
+    'SecP192K1': 'secp192k1',
+    'SecP224K1': 'secp224k1',
+    'SecP256K1': 'secp256k1',
+    'NistP192': 'prime192v1',
+    'NistP224': 'secp224r1',
+    'NistP256': 'prime256v1',
+    'NistP384': 'secp384r1',
+    'NistP521': 'secp521r1',
+}
+
+elliptic_curves = skey_to_openssl_ecnames.keys()
+
+
+def get_elliptic_curves():
+    return elliptic_curves
+
+
+def get_ec_pem(skey_ecname):
+    """
+    Given a curve name from SmartKey return a PEM blob (including BEGIN
+    and END)
+    """
+    oname = skey_to_openssl_ecnames[skey_ecname]
+
+    output = subprocess.check_output(['openssl', 'ecparam', '-name', oname])
+
+    return output.strip()
 
 
 def find_first_bitstring(instream):
