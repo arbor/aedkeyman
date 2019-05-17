@@ -9,6 +9,5 @@ from .smartkey import (SmartKey, SmartKeyException,
                        SmartKeyNeedsAuthException,
                        SmartKeyNeedsAcctSelectException,
                        SmartKeyAuthUserException)
-from .util import (get_elliptic_curves,
-                   get_ec_pem,
+from .util import (get_ec_pem,
                    pkcs8_to_pub)

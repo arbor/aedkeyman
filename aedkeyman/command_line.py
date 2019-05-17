@@ -20,8 +20,7 @@ from aedkeyman import (MissingConfigException,
                        SmartKeyNeedsAcctSelectException,
                        SmartKeyAuthUserException,
                        pkcs8_to_pub,
-                       get_ec_pem,
-                       get_elliptic_curves)
+                       get_ec_pem)
 
 
 # How much to indent hierarchical output
@@ -29,6 +28,10 @@ indent_step = 2
 
 # Global count of the number of errors that have occurred.
 error_count = 0
+
+# What elliptic curves to support -- the old HSM on AED only supports
+# a few.
+elliptic_curves = ('NistP192', 'NistP256', 'NistP384')
 
 
 def get_skey_kwargs(args):
@@ -644,7 +647,7 @@ def main():
                         help="generate an EC key on SmartKey")
     subp.add_argument('name', type=str, help="name/label for the key")
     subp.add_argument('curve', type=str,
-                      choices=get_elliptic_curves(),
+                      choices=elliptic_curves,
                       help="standardized elliptic curve to use")
     subp.add_argument('--desc', type=str, metavar="STRING",
                       help="description of EC key")

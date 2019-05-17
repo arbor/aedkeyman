@@ -23,12 +23,6 @@ skey_to_openssl_ecnames = {
     'NistP521': 'secp521r1',
 }
 
-elliptic_curves = skey_to_openssl_ecnames.keys()
-
-
-def get_elliptic_curves():
-    return elliptic_curves
-
 
 def get_ec_pem(skey_ecname):
     """
