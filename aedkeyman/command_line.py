@@ -106,9 +106,12 @@ def cmd_skey_login(args):
     print ("Session will expire in %s. Use the 'skey-logout' command to " +
            "terminate it sooner.") % (timedelta(seconds=ttl),)
 
-    # Select the account to use. Sometimes this is required.
-    # TODO: Make auto_account_id the default behavior?
-    if args.auto_account_id:
+    # Select the account to use. Some operations require this so we
+    # do it automatically.
+    if args.account_id is not None:
+        logging.debug("Selecting account %s" % args.account_id)
+        output_and_exit(ska.select_account(args.account_id))
+    else:
         accounts = ska.list_accounts()
         if len(accounts) > 1:
             logging.warn("Multiple accounts available, using the first one")
@@ -116,9 +119,6 @@ def cmd_skey_login(args):
         logging.debug("Selecting account %s" % acid)
         output_and_exit(ska.select_account(acid))
 
-    if args.account_id is not None:
-        logging.debug("Selecting account %s" % args.account_id)
-        output_and_exit(ska.select_account(args.account_id))
 
 
 def cmd_skey_logout(args):
@@ -697,8 +697,6 @@ def main():
     groupp = subp.add_mutually_exclusive_group()
     groupp.add_argument('--account-id', type=str, metavar='UUID',
                         help="select a specific account ID")
-    groupp.add_argument('--auto-account-id', action='store_true',
-                        help="")
 
     subp = register_cmd('skey-logout',
                         help="terminate session with SmartKey")
