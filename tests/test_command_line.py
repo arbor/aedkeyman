@@ -1,8 +1,12 @@
-#!/usr/bin/env python
+"""
+Test aedkeyman proper
+"""
 
 import unittest
-from mock import patch
+
 from aedkeyman import command_line
+
+from mock import patch
 
 BASE_URL = 'https://www.smartkey.io/'
 
@@ -98,12 +102,14 @@ class KeyManTestCase(unittest.TestCase):
     @patch('aedkeyman.SmartKey._fetch_token')
     @patch('aedkeyman.ArborEdgeDefense.import_key')
     @patch('aedkeyman.ArborEdgeDefense.list_keys')
-    def test_00_sync_no_keys(self, aed_list_keys, aed_import_key,
+    @patch('os.getenv')
+    def test_00_sync_no_keys(self, getenv, aed_list_keys, aed_import_key,
                              ska_fetch_token, ska_list_keys,
                              ska_export_key):
         """ Do nothing when there are no keys.
         """
         args = object()
+        getenv.return_value = ""
         ska_list_keys.return_value = {}
         aed_list_keys.return_value = {}
         command_line.cmd_skey_sync_keys(args)
