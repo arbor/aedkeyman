@@ -103,7 +103,7 @@ class ArborEdgeDefense(object):
             elif method == 'DELETE':
                 result = requests.delete(url=self.baseurl + url_suffix,
                                          headers=headers, verify=self.verify)
-        except ConnectionError, exc:
+        except ConnectionError as exc:
             # TODO: should clean this up
             raise ArborEdgeDefenseException(str(exc))
         else:

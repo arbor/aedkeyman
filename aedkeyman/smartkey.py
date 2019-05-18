@@ -81,7 +81,7 @@ class SmartKey(object):
             'description': description,
             # [ AES, DES, DES3, RSA, EC, OPAQUE, HMAC, SECRET, CERTIFICATE ]
             'rsa': {
-                'key_size': size
+                'key_size': size,
             },
 
             # Impose no constraints on encryption or key wrapping
@@ -200,7 +200,7 @@ class SmartKey(object):
         Export the key data.
         """
         body = {
-            'kid': kid
+            'kid': kid,
         }
         res = self._request('POST',
                             "/crypto/v1/keys/export",
@@ -221,7 +221,7 @@ class SmartKey(object):
         """
         logging.info("Authenticating with SmartKey as an application")
         headers = {
-            'Authorization': 'Basic ' + self.apikey
+            'Authorization': 'Basic ' + self.apikey,
         }
         res = requests.request(method='POST',
                                url="%s/sys/v1/session/auth" % (self.baseurl,),
@@ -273,7 +273,7 @@ class SmartKey(object):
         """
         """
         body = {
-            'acct_id': acct_id
+            'acct_id': acct_id,
         }
         res = self._request('POST',
                             "/sys/v1/session/select_account",
@@ -339,7 +339,7 @@ class SmartKey(object):
         logging.debug("%s %s\n%s" % (method, self.baseurl + url_suffix, data))
 
         headers = {
-            'Authorization': 'Bearer ' + self.token
+            'Authorization': 'Bearer ' + self.token,
         }
 
         if method == 'POST':
@@ -377,8 +377,9 @@ class SmartKey(object):
             # 403 can mean 'Requested operation is not allowed with this key'
             # in which case (re)authenticating won't solve the problem so we're
             # checking the text to see if it's this specific error.
-            if (result.status_code == 403 and
-                    'Requested operation is not allowed' not in result.text):
+            if (result.status_code == 403
+                    and 'Requested operation is not allowed'
+                    not in result.text):
                 if self.apikey is not None:
                     logging.info("Response has 403: %s (Retrying...)" %
                                  (result.text,))
@@ -386,9 +387,9 @@ class SmartKey(object):
                     result = self._request_aux(method, url_suffix, data)
                 else:
                     raise SmartKeyNeedsAuthException(result.text)
-            elif (result.status_code == 401 and
-                    ('operation requires an account to be selected' in
-                     result.text)):
+            elif (result.status_code == 401
+                  and ('operation requires an account to be selected'
+                       in result.text)):
                 raise SmartKeyNeedsAcctSelectException(result.text)
             else:
                 # Note that indicating there was an error here is purely a

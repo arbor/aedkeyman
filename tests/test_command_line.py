@@ -103,7 +103,7 @@ class KeyManTestCase(unittest.TestCase):
     @patch('aedkeyman.ArborEdgeDefense.import_key')
     @patch('aedkeyman.ArborEdgeDefense.list_keys')
     @patch('os.getenv')
-    def test_00_sync_no_keys(self, getenv, aed_list_keys, aed_import_key,
+    def test_05_sync_no_keys(self, getenv, aed_list_keys, aed_import_key,
                              ska_fetch_token, ska_list_keys,
                              ska_export_key):
         """ Do nothing when there are no keys.

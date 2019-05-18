@@ -3,24 +3,26 @@
 # All rights reserved.  Proprietary and confidential.
 #
 
-"""
-Manage keys on Arbor Edge Defense and between third parties.
-"""
+"""Manage keys on Arbor Edge Defense and between third parties."""
 
 import argparse
-from datetime import timedelta
 import getpass
 import logging
 import os
 import sys
-from aedkeyman import (MissingConfigException,
-                       ArborEdgeDefense, ArborEdgeDefenseException,
-                       SmartKey, SmartKeyException,
-                       SmartKeyNeedsAuthException,
-                       SmartKeyNeedsAcctSelectException,
-                       SmartKeyAuthUserException,
-                       pkcs8_to_pub,
-                       get_ec_pem)
+from datetime import timedelta
+
+from aedkeyman import (
+    ArborEdgeDefense,
+    ArborEdgeDefenseException,
+    MissingConfigException,
+    SmartKey,
+    SmartKeyAuthUserException,
+    SmartKeyException,
+    SmartKeyNeedsAcctSelectException,
+    SmartKeyNeedsAuthException,
+    get_ec_pem,
+    pkcs8_to_pub)
 
 
 # How much to indent hierarchical output
@@ -35,24 +37,20 @@ elliptic_curves = ('NistP192', 'NistP256', 'NistP384')
 
 
 def get_skey_kwargs(args):
-    """
-    Return optional keyword arguments for aedkeyman.SmartKey.__init__()
-    """
+    """Return optional keyword arguments for aedkeyman.SmartKey.__init__()."""
     #
     # For development purposes we allow the API KEY to be set in the
     # environment. This will authenticate as an application and avoid prompting
     # the user.
     #
     kwargs = {
-        'apikey': os.getenv('SKEY_API_KEY')
+        'apikey': os.getenv('SKEY_API_KEY'),
     }
     return kwargs
 
 
 def get_aed_args(args):
-    """
-    Return mandatory arguments for aedkeyman.aed.__init__()
-    """
+    """Return mandatory arguments for aedkeyman.aed.__init__()."""
     #
     # For development purposes we allow the API KEY to be set in the
     # environment. This will authenticate as an application and avoid prompting
@@ -60,22 +58,22 @@ def get_aed_args(args):
     #
     hostname = os.getenv('AED_HOST')
     if hostname is None:
-        raise MissingConfigException("Set AED_HOST to the hostname " +
-                                     "of Arbor AED")
+        raise MissingConfigException("Set AED_HOST to the hostname "
+                                     + "of Arbor AED")
     token = os.getenv('AED_TOKEN')
     if token is None:
-        raise MissingConfigException("Set AED_TOKEN to the API TOKEN" +
-                                     "for Arbor AED")
+        raise MissingConfigException("Set AED_TOKEN to the API TOKEN"
+                                     + "for Arbor AED")
 
     hsm_user = os.getenv('AED_HSM_USER')
     if hsm_user is None:
-        raise MissingConfigException("Set AED_HSM_USER to the HSM crypto" +
-                                     "user for Arbor AED")
+        raise MissingConfigException("Set AED_HSM_USER to the HSM crypto"
+                                     + "user for Arbor AED")
 
     hsm_pass = os.getenv('AED_HSM_PASS')
     if hsm_pass is None:
-        raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto" +
-                                     "user password for Arbor AED")
+        raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto"
+                                     + "user password for Arbor AED")
 
     if os.getenv('AED_DISABLE_CERT_VERIFY', 'false') == 'true':
         disable_cert_verify = True
@@ -120,7 +118,6 @@ def cmd_skey_login(args):
         output_and_exit(ska.select_account(acid))
 
 
-
 def cmd_skey_logout(args):
     """
     Terminate a session. This invalidates the saved token.
@@ -154,13 +151,13 @@ def cmd_skey_delete_key(args):
             kid = key['kid']
             try:
                 output_and_exit(ska.delete_key(kid))
-            except SmartKeyException, exc:
+            except SmartKeyException as exc:
                 msg = "Failed to delete '%s' on SmartKey: %s" % (name, exc)
                 output_error(msg)
             if args.update_aed:
                 try:
                     aed.delete_key(name)
-                except ArborEdgeDefenseException, exc:
+                except ArborEdgeDefenseException as exc:
                     msg = "Failed to delete '%s' on AED: %s" % (name, exc)
                     output_error(msg)
     elif args.kid:
@@ -178,14 +175,14 @@ def cmd_skey_delete_key(args):
             output_and_exit("No key '%s' found" % (name,), error=True)
         try:
             ska.delete_key(kid)
-        except SmartKeyException, exc:
+        except SmartKeyException as exc:
             msg = "Failed to delete '%s' on SmartKey: %s" % (name, exc)
             output_and_exit(msg, error=True)
         else:
             if args.update_aed:
                 try:
                     aed.delete_key(name)
-                except ArborEdgeDefenseException, exc:
+                except ArborEdgeDefenseException as exc:
                     msg = "Failed to delete '%s' on AED: %s" % (name, exc)
                     output_error(msg)
     else:
@@ -220,8 +217,9 @@ def cmd_skey_export_key(args):
 
     # If there is any output being written to a file, suppress
     # normal program output
-    if (not args.out_file and not args.out_priv_file and
-            not args.out_pub_file):
+    if (not args.out_file
+            and not args.out_priv_file
+            and not args.out_pub_file):
         print blob
 
 
@@ -298,15 +296,15 @@ def cmd_aed_delete_key(args):
             name = akey['name']
             try:
                 aed.delete_key(name)
-            except ArborEdgeDefenseException, exc:
+            except ArborEdgeDefenseException as exc:
                 msg = "Failed to delete '%s' on AED: %s" % (name, exc)
                 output_error(msg)
     elif args.name is not None:
-            try:
-                aed.delete_key(args.name)
-            except ArborEdgeDefenseException, exc:
-                msg = "Failed to delete '%s' on AED: %s" % (args.name, exc)
-                output_error(msg)
+        try:
+            aed.delete_key(args.name)
+        except ArborEdgeDefenseException as exc:
+            msg = "Failed to delete '%s' on AED: %s" % (args.name, exc)
+            output_error(msg)
 
 
 def cmd_skey_gen_rsa_key(args):
@@ -426,7 +424,7 @@ def cmd_skey_sync_keys(args):
         if ktype == 'RSA':
             try:
                 data = ska.export_key(kid)
-            except SmartKeyException, exc:
+            except SmartKeyException as exc:
                 msg = "%s (%s)" % (exc, name)
                 output_error(msg)
                 continue
@@ -439,7 +437,7 @@ def cmd_skey_sync_keys(args):
         elif ktype == 'EC':
             try:
                 data = ska.export_key(kid)
-            except SmartKeyException, exc:
+            except SmartKeyException as exc:
                 msg = "%s (%s)" % (exc, name)
                 output_error(msg)
                 continue
@@ -451,7 +449,7 @@ def cmd_skey_sync_keys(args):
 
         try:
             aed.import_key(name, priv)
-        except ArborEdgeDefenseException, exc:
+        except ArborEdgeDefenseException as exc:
             msg = "Failed to import '%s' on AED: %s" % (name, exc)
             output_error(msg)
             continue
@@ -461,8 +459,9 @@ def wrap_text_begin_end(title, body):
     """
     Helper to wrap a block of text with BEGIN and END for PEM formatting.
     """
-    return ("-----BEGIN %s-----\n" % (title,) + body +
-            "\n-----END %s-----" % (title,))
+    return ("-----BEGIN %s-----\n" % (title,)
+            + body
+            + "\n-----END %s-----" % (title,))
 
 
 def output_and_exit(data, error=False):
@@ -672,11 +671,11 @@ def main():
     # groupp.add_argument('--group-name', type=str, metavar='NAME',
     #                    help="name of group the key should belong to")
     subp.add_argument('--out-priv-file', type=str, metavar='FILE',
-                      help=("file for private key output in PEM format (for " +
-                            " web server)"))
+                      help=("file for private key output in PEM format (for "
+                            + " web server)"))
     subp.add_argument('--out-pub-file', type=str, metavar='FILE',
-                      help=("file for public key output in PEM format (for " +
-                            "CSR)"))
+                      help=("file for public key output in PEM format (for "
+                            + "CSR)"))
     subp.add_argument('--update-aed', action='store_true',
                       help="also push the key to AED")
 
