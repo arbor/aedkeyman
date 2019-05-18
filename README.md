@@ -43,7 +43,7 @@ is currently done with environment variables:
     To generate one for the *admin* user:
 
     ```
-    services aaa local apitoken generate admin
+    services aaa local apitoken generate admin description
     ```
 
 2. Set *AED_HOST* to the host name and *AED_TOKEN* to the API token created
@@ -104,8 +104,7 @@ Example Usage
 1. First create a session with the SmartKey service by authenticating:
 
     ```
-    /aedkeyman.py skey-login --username=exampleuser \
-        --account-id=8a1df675-7807-4b7e-9446-19b607518fa4
+    /aedkeyman.py skey-login --username=exampleuser
     ```
 
     You will be prompted for a password. Upon successfully logging in a message
@@ -120,7 +119,7 @@ Example Usage
     missing.
 
     ```
-    ./aedkeyman.py skey-list-keys --unified
+    ./aedkeyman.py skey-list-keys
     ```
 
 3. Synchronize the keys from the SmartKey HSM to the HSM on the AED appliance.
