@@ -1,17 +1,12 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
-"""
-Manage a connection and interface with Equinix Smart Key to manage keys.
-"""
+
+"""Manage a connection and interface with Equinix Smart Key to manage keys."""
 
 import base64
 import json
 import logging
 import os
 import pprint
-import stat
 from builtins import object
 
 import requests
@@ -22,49 +17,44 @@ USER_TOKEN_FILE = os.path.join(TOKEN_DIR, '.skey_user_token')
 
 
 class SmartKeyException(Exception):
-    """
-    General error from SmartKey
-    """
+    """General error from SmartKey."""
+
     pass
 
 
 class SmartKeyNeedsAuthException(SmartKeyException):
-    """
-    Authorization failed due to missing credentials.
-    """
+    """Authorization failed due to missing credentials."""
+
     pass
 
 
 class SmartKeyNeedsAcctSelectException(SmartKeyException):
-    """
-    Account selection must be performed.
-    """
+    """Account selection must be performed."""
+
     pass
 
 
 class SmartKeyAuthAppException(SmartKeyException):
-    """
-    Raise when application authentication fails.
-    """
+    """Raise when application authentication fails."""
+
     pass
 
 
 class SmartKeyAuthUserException(SmartKeyException):
-    """
-    Raise when user authentication fails.
-    """
+    """Raise when user authentication fails."""
+
     pass
 
 
 class SmartKey(object):
-    """
-    Manage a connection and interface with SmartKey using the REST API.
-    """
+    """Manage a connection and interface with SmartKey using the REST API."""
+
     def __init__(self, apikey=None):
         """
-        Initialize an instance. This will fetch the token from disk
-        automatically if it exists. Pass an API key to authenticate as
-        an application.
+        Initialize an instance.
+
+        This will fetch the token from disk automatically if it exists. Pass an
+        API key to authenticate as an application.
 
         apikey - API key for SmartKey
         """
@@ -75,9 +65,7 @@ class SmartKey(object):
         self._fetch_token()
 
     def generate_rsa_key(self, name, size, description, group_id=None):
-        """
-        Generate an RSA key with the given parameters.
-        """
+        """Generate an RSA key with the given parameters."""
         body = {
             'obj_type': 'RSA',
             'name': name,
@@ -111,9 +99,7 @@ class SmartKey(object):
         return kid
 
     def generate_ec_key(self, name, curve, group_id, description):
-        """
-        Generate an Elliptic Curve key with the given parameters.
-        """
+        """Generate an Elliptic Curve key with the given parameters."""
         body = {
             'obj_type': 'EC',
             'name': name,
@@ -138,9 +124,7 @@ class SmartKey(object):
         return kid
 
     def delete_key(self, kid):
-        """
-        Delete a key.
-        """
+        """Delete a key."""
         res = self._request('DELETE',
                             "/crypto/v1/keys/" + kid)
         if res.status_code != requests.codes.no_content:
@@ -149,7 +133,9 @@ class SmartKey(object):
 
     def list_keys(self, name=None, group_id=None):
         """
-        TODO: group_id
+        List keys.
+
+        TODO: use group_id
         """
         data = None
         if name is not None:
@@ -166,9 +152,7 @@ class SmartKey(object):
         return keys
 
     def list_accounts(self):
-        """
-        List the accounts.
-        """
+        """List the accounts."""
         res = self._request('GET', "/sys/v1/accounts")
         if res.status_code != requests.codes.ok:
             msg = "%d %s" % (res.status_code, res.text)
@@ -177,9 +161,7 @@ class SmartKey(object):
         return res.json()
 
     def list_groups(self):
-        """
-        List the groups.
-        """
+        """List the groups."""
         res = self._request('GET', "/sys/v1/groups")
         if res.status_code != requests.codes.ok:
             msg = "%d %s" % (res.status_code, res.text)
@@ -188,9 +170,7 @@ class SmartKey(object):
         return res.json()
 
     def get_key(self, kid):
-        """
-        Get a specific key (security object) by key id.
-        """
+        """Get a specific key (security object) by key id."""
         res = self._request('GET', "/crypto/v1/keys/%s" % kid)
         if res.status_code != requests.codes.ok:
             msg = "%d %s" % (res.status_code, res.text)
@@ -199,9 +179,7 @@ class SmartKey(object):
         return res.json()
 
     def export_key(self, kid):
-        """
-        Export the key data.
-        """
+        """Export the key data."""
         body = {
             'kid': kid,
         }
@@ -220,7 +198,9 @@ class SmartKey(object):
 
     def auth_app(self, save=True):
         """
-        Authenticate and acquire bearer token to use for subsequent requests.
+        Authenticate as application and acquire bearer token.
+
+        Acquire the token to save use for subsequent requests.
         """
         logging.info("Authenticating with SmartKey as an application")
         headers = {
@@ -245,7 +225,9 @@ class SmartKey(object):
 
     def auth_user(self, username, password, save=False):
         """
-        Authenticate and acquire bearer token to use for subsequent requests.
+        Authenticate as user and acquire bearer token.
+
+        Acquire the token to save use for subsequent requests.
         """
         logging.info("Authenticating with SmartKey as a user")
         creds = '%s:%s' % (username, password)
@@ -274,8 +256,7 @@ class SmartKey(object):
         return expires
 
     def select_account(self, acct_id):
-        """
-        """
+        """Select an account by id."""
         body = {
             'acct_id': acct_id,
         }
@@ -292,8 +273,7 @@ class SmartKey(object):
         return data
 
     def terminate_session(self):
-        """
-        """
+        """Terminate a session."""
         if self.token is None:
             raise SmartKeyException("No saved session token to invalidate.")
 
@@ -305,9 +285,7 @@ class SmartKey(object):
             raise SmartKeyException(msg)
 
     def _save_token(self):
-        """
-        Save the auth token to disk to use it in the future.
-        """
+        """Save the auth token to disk to use it in the future."""
         # TODO: use NamedTemporaryFile() and move in to place
         with open(self.token_file, "w") as tfile:
             tfile.write(self.token)
@@ -316,9 +294,7 @@ class SmartKey(object):
         os.chmod(self.token_file, stat.S_IRUSR | stat.S_IWUSR)
 
     def _fetch_token(self):
-        """
-        Return saved auth token or fetch a new one.
-        """
+        """Return saved auth token or fetch a new one."""
         try:
             with open(self.token_file) as tfile:
                 self.token = tfile.readline().rstrip()
@@ -330,16 +306,14 @@ class SmartKey(object):
                 self.auth_app()
 
     def purge_token(self):
-        """
-        Remove the saved auth token
-        """
+        """Remove the saved auth token."""
         self.token = None
         os.unlink(self.token_file)
 
     def _request_aux(self, method, url_suffix, data):
-        """
-        Request helper. This issues a request and does not handle
-        authentication.
+        """Request helper.
+
+        This issues a request and does not handle authentication.
         """
         logging.debug("%s %s\n%s" % (method, self.baseurl + url_suffix, data))
 
@@ -363,9 +337,10 @@ class SmartKey(object):
         return result
 
     def _request(self, method, url_suffix, data=None):
-        """
-        Make a request and if it fails due to authorization, automatically
-        authenticate and try again.
+        """Make a request with possible authorization.
+
+        Attempt to make a request and if it fails due to authorization,
+        automatically authenticate and try again.
         """
         # No token means we need to authenticate and get one
         if self.token is None:

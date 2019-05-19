@@ -1,13 +1,14 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
 
-from .defs import MissingConfigException
-from .aed import ArborEdgeDefense, ArborEdgeDefenseException
-from .smartkey import (SmartKey, SmartKeyException,
-                       SmartKeyNeedsAuthException,
+"""Manage TLS keys on NETSCOUT Arbor Edge Defense."""
+
+from .aed import (ArborEdgeDefense,                                # noqa: F401
+                  ArborEdgeDefenseException)
+from .defs import MissingConfigException                           # noqa: F401
+from .smartkey import (SmartKey,                                   # noqa: F401
+                       SmartKeyAuthUserException,
+                       SmartKeyException,
                        SmartKeyNeedsAcctSelectException,
-                       SmartKeyAuthUserException)
-from .util import (get_ec_pem,
+                       SmartKeyNeedsAuthException)
+from .util import (get_ec_pem,                                     # noqa: F401
                    pkcs8_to_pub)

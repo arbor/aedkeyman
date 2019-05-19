@@ -1,11 +1,8 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
 
+"""Exceptions and constants shared by submodules."""
 
 class MissingConfigException(Exception):
-    """
-    Raise when required configuration is missing.
-    """
+    """Raise when required configuration is missing."""
+
     pass

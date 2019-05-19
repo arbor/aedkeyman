@@ -1,12 +1,6 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
 
-"""
-Manage a connection and interface with Arbor Edge Defense to manage keys on
-the HSM.
-"""
+"""Manage keys on Arbor Edge Defense."""
 
 import logging
 from builtins import object
@@ -17,18 +11,24 @@ from requests.exceptions import ConnectionError
 
 
 class ArborEdgeDefenseException(Exception):
-    """
-    General error from ArborEdge.
-    """
+    """General error from ArborEdge."""
+
     pass
 
 
 class ArborEdgeDefense(object):
-    """
-    Manage Keys on AED.
-    """
+    """Manage Keys on AED."""
+
     def __init__(self, hostname, token, hsm_user, hsm_pass,
                  disable_cert_verify=False):
+        """
+        Initialize an instance.
+
+        hsm_user -- crypto user name
+        hsm_user -- crypto user password
+        token -- API token
+        disable_cert_verify -- disable verification AED cert (LAB USE)
+        """
         self.token = token
         self.hsm_user = hsm_user
         self.hsm_pass = hsm_pass
@@ -36,6 +36,7 @@ class ArborEdgeDefense(object):
         self.verify = not disable_cert_verify
 
     def import_key(self, name, priv, cert=None):
+        """Import a key."""
         body = {
             'label': name,
             'privateKey': priv,
@@ -48,11 +49,13 @@ class ArborEdgeDefense(object):
             self._raise_errors(res)
 
     def delete_key(self, name):
+        """Delete a key."""
         res = self._request('DELETE', "/hsm/certificates/" + name)
         if res.status_code != 204:
             self._raise_errors(res)
 
     def list_keys(self):
+        """List keys."""
         res = self._request('GET', "/hsm/certificates/", data={'details': 1})
         if res.status_code != 200:
             self._raise_errors(res)
@@ -66,7 +69,7 @@ class ArborEdgeDefense(object):
 
             key = {
                 'name': item['label'],
-                'type': item['type']
+                'type': item['type'],
             }
             if 'public' in item:
                 key['public'] = item['public']
@@ -82,10 +85,7 @@ class ArborEdgeDefense(object):
         raise ArborEdgeDefenseException('\n'.join(msgs))
 
     def _request(self, method, url_suffix, data=None):
-        """
-        Request helper. This issues a request and does not handle
-        authentication.
-        """
+        """Issue a request."""
         logging.debug("%s %s\n%s" % (method, self.baseurl + url_suffix, data))
         headers = {
             'X-Arbux-APIToken': self.token,

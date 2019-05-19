@@ -1,7 +1,6 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
+
+"""Test SmartKey connection management and interface."""
 
 import base64
 import json
@@ -284,7 +283,7 @@ class SmartKeyTestCase(unittest.TestCase):
         creds = '%s:%s' % (username, password)
         encoded = base64.b64encode(creds.encode('ascii'))
         headers = {
-            'Authorization': 'Basic ' + encoded.decode('ascii')
+            'Authorization': 'Basic ' + encoded.decode('ascii'),
         }
         mrequest.assert_called_with(headers=headers, method='POST',
                                     url=BASE_URL + 'sys/v1/session/auth')
@@ -296,7 +295,7 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey()
         skey.token = BEARER_TOKEN
         headers = {
-            'Authorization': 'Bearer ' + BEARER_TOKEN
+            'Authorization': 'Bearer ' + BEARER_TOKEN,
         }
         req_data = {
             "obj_type": "RSA",
@@ -324,10 +323,10 @@ class SmartKeyTestCase(unittest.TestCase):
             "rsa": {
                 "key_size": 2048,
                 "encryption_policy": [{"padding": {"OAEP": {"mgf": None}}}],
-                "signature_policy": [{"padding": None}]
+                "signature_policy": [{"padding": None}],
             },
             "acct_id": "bf6ea1a8-4e77-478f-a4e2-2524197614a8",
-            "group_id": "8820a695-2476-431a-8aea-8f631624912d"
+            "group_id": "8820a695-2476-431a-8aea-8f631624912d",
         }
         mresponse = MagicMock()
         mresponse.status_code = requests.codes.created
@@ -351,10 +350,10 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey(apikey=API_KEY)
         skey.token = BEARER_TOKEN
         headers = {
-            'Authorization': 'Bearer ' + BEARER_TOKEN
+            'Authorization': 'Bearer ' + BEARER_TOKEN,
         }
         req_data = {
-            'kid': 'fe0b726f-ae25-4939-a67b-382a4e7f35f7'
+            'kid': 'fe0b726f-ae25-4939-a67b-382a4e7f35f7',
         }
         resp_data = {
             'acct_id': 'bf6ea1a8-4e77-478f-a4e2-2524197614a8',
@@ -376,7 +375,7 @@ class SmartKeyTestCase(unittest.TestCase):
             'rsa': {
                 'encryption_policy': [{'padding': {'OAEP': {'mgf': None}}}],
                 'key_size': 2048,
-                'signature_policy': [{'padding': None}]
+                'signature_policy': [{'padding': None}],
             },
             'value': test_rsa_priv,
         }
@@ -396,7 +395,7 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey(apikey=API_KEY)
         skey.token = BEARER_TOKEN
         headers = {
-            'Authorization': 'Bearer ' + BEARER_TOKEN
+            'Authorization': 'Bearer ' + BEARER_TOKEN,
         }
         resp_data = [list_ec1, list_rsa1, list_cert1]
         mresponse = MagicMock()
@@ -415,7 +414,7 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey(apikey=API_KEY)
         skey.token = BEARER_TOKEN
         headers = {
-            'Authorization': 'Bearer ' + BEARER_TOKEN
+            'Authorization': 'Bearer ' + BEARER_TOKEN,
         }
         resp_data = [list_rsa1]
         mresponse = MagicMock()
@@ -435,7 +434,7 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey(apikey=API_KEY)
         skey.token = BEARER_TOKEN
         headers = {
-            'Authorization': 'Bearer ' + BEARER_TOKEN
+            'Authorization': 'Bearer ' + BEARER_TOKEN,
         }
         resp_data = [
             {
@@ -444,15 +443,15 @@ class SmartKeyTestCase(unittest.TestCase):
                 "description": "",
                 "group_id": "39381c80-c512-405a-abbe-2e5a07e5d440",
                 "name": "second",
-                "acct_id": "bf6ea1a8-4e77-478f-a4e2-2524197614a8"
+                "acct_id": "bf6ea1a8-4e77-478f-a4e2-2524197614a8",
             }, {
                 "created_at": "20180523T175159Z",
                 "creator": {"user": "fae8b863-c1f9-4b68-82bd-8e86c47c7a01"},
                 "description": "",
                 "group_id": "8820a695-2476-431a-8aea-8f631624912d",
                 "name": "test",
-                "acct_id": "bf6ea1a8-4e77-478f-a4e2-2524197614a8"
-            }
+                "acct_id": "bf6ea1a8-4e77-478f-a4e2-2524197614a8",
+            },
         ]
         mresponse = MagicMock()
         mresponse.status_code = requests.codes.ok

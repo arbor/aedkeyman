@@ -31,7 +31,7 @@ from aedkeyman import (
 indent_step = 2
 
 # Global count of the number of errors that have occurred.
-error_count = 0
+err_count = 0
 
 # What elliptic curves to support -- the old HSM on AED only supports
 # a few.
@@ -86,9 +86,7 @@ def get_aed_args(args):
 
 
 def cmd_skey_login(args):
-    """
-    Create a new session by authenticating as a user.
-    """
+    """Create a new session by authenticating as a user."""
     if args.username is None:
         print("Username: ", end=' ')
         username = sys.stdin.readline().strip()
@@ -121,25 +119,26 @@ def cmd_skey_login(args):
 
 
 def cmd_skey_logout(args):
-    """
-    Terminate a session. This invalidates the saved token.
-    """
+    """Terminate a session. This invalidates the saved token."""
     ska = SmartKey(**get_skey_kwargs(args))
     output_and_exit(ska.terminate_session())
 
 
 def cmd_skey_gen_ec_key(args):
+    """Generate an elliptic curve key on SmartKey."""
     ska = SmartKey(**get_skey_kwargs(args))
     output_and_exit(ska.generate_ec_key(args.name, args.curve,
                                         args.group_id, args.desc))
 
 
 def cmd_skey_show_key(args):
+    """Show a key on SmartKey."""
     ska = SmartKey(**get_skey_kwargs(args))
     output_and_exit(ska.get_key(args.kid))
 
 
 def cmd_skey_delete_key(args):
+    """Delete a key from SmartKey."""
     ska = SmartKey(**get_skey_kwargs(args))
     name = None
 
@@ -192,6 +191,7 @@ def cmd_skey_delete_key(args):
 
 
 def cmd_skey_export_key(args):
+    """Export a key from SmartKey."""
     ska = SmartKey(**get_skey_kwargs(args))
 
     data = ska.export_key(args.kid)
@@ -226,16 +226,19 @@ def cmd_skey_export_key(args):
 
 
 def cmd_skey_list_accounts(args):
+    """List available SmartKey accounts."""
     ska = SmartKey(**get_skey_kwargs(args))
     output_and_exit(ska.list_accounts())
 
 
 def cmd_skey_list_groups(args):
+    """List available SmartKey groups."""
     ska = SmartKey(**get_skey_kwargs(args))
     output_and_exit(ska.list_groups())
 
 
 def name_to_skey_id(ska, name):
+    """Lookup a key and return the associated key id (kid)."""
     data = ska.list_keys(name=name)
     if len(data) > 0:
         return data[0]['kid']
@@ -244,6 +247,7 @@ def name_to_skey_id(ska, name):
 
 
 def cmd_skey_name_to_kid(args):
+    """Lookup a key and return the associated key id (kid)."""
     ska = SmartKey(**get_skey_kwargs(args))
     kid = name_to_skey_id(ska, args.name)
     if kid is None:
@@ -253,12 +257,14 @@ def cmd_skey_name_to_kid(args):
 
 
 def cmd_aed_list_keys(args):
+    """List all keys on AED."""
     eargs = get_aed_args(args)
     aed = ArborEdgeDefense(*eargs)
     output_and_exit(aed.list_keys())
 
 
 def cmd_aed_import_ec_key(args):
+    """Import elliptic curve key to AED."""
     if args.in_file is not None:
         with open(args.in_file) as infile:
             blob = infile.read()
@@ -277,6 +283,7 @@ def cmd_aed_import_ec_key(args):
 
 
 def cmd_aed_import_rsa_key(args):
+    """Import RSA key to AED."""
     if args.in_priv_file is not None:
         with open(args.in_priv_file) as infile:
             priv = infile.read().strip()
@@ -367,8 +374,8 @@ def cmd_skey_list_keys(args):
 
     # TODO: this doesn't support when you have multiple keys with the same
     # name in SmartKey.
-    snames = set(skey['name'] for skey in ska_keys)
-    anames = set(akey['name'] for akey in aed_keys)
+    snames = {skey['name'] for skey in ska_keys}
+    anames = {akey['name'] for akey in aed_keys}
     allnames = sorted(snames.union(anames))
     print("Name                                               Type"
           + "         SmartKey AED")
@@ -392,9 +399,7 @@ def cmd_skey_list_keys(args):
 
 
 def cmd_skey_sync_keys(args):
-    """
-    Push the keys from the SmartKey HSM to the AED HSM.
-    """
+    """Push the keys from the SmartKey HSM to the AED HSM."""
     aed = ArborEdgeDefense(*get_aed_args(args))
     ska = SmartKey(**get_skey_kwargs(args))
     aed_keys = aed.list_keys()
@@ -458,9 +463,7 @@ def cmd_skey_sync_keys(args):
 
 
 def wrap_text_begin_end(title, body):
-    """
-    Helper to wrap a block of text with BEGIN and END for PEM formatting.
-    """
+    """Wrap a block of text with BEGIN and END for PEM formatting."""
     return ("-----BEGIN %s-----\n" % (title,)
             + body
             + "\n-----END %s-----" % (title,))
@@ -468,27 +471,26 @@ def wrap_text_begin_end(title, body):
 
 def output_and_exit(data, error=False):
     output(data, error)
-    exit(error)
+    _exit(error)
 
 
 def output_error(data):
-    """
-    Given the data returned from a SmartKey or ArborEdgeDefense, print data to
-    stderr.
-    """
+    """Print and format to stderr and track errors."""
     output(data, error=True)
 
 
 def output(data, error=False, indent=0):
     """
+    Format output and track errors.
+
     Given the data returned from a SmartKey or ArborEdgeDefense, print data to
     stdout/stderr. This is a generic output handler intended to provide minimal
     formatting for whatever type of data is returned.
     """
     if error:
-        global error_count
+        global err_count
 
-        error_count += 1
+        err_count += 1
 
         if data is not None:
             if isinstance(data, tuple) or isinstance(data, list):
@@ -530,14 +532,15 @@ def output(data, error=False, indent=0):
                 print(istr + data)
 
 
-def exit(error):
-    """
-    Exit with the appropriate status based on if there is currently an error
+def _exit(err):
+    """Exit with the appropriate status and track errors.
+
+    This exits with an error status if there is currently an error
     or if there was an error.
     """
-    global error_count
+    global err_count
 
-    sys.exit(1 if error or error_count > 0 else 0)
+    sys.exit(1 if err or err_count > 0 else 0)
 
 
 def get_handler(name):
@@ -554,9 +557,7 @@ def get_handler(name):
 
 
 def invoke_handler(progname, args):
-    """
-    Invoke the command handler for the parsed arguments.
-    """
+    """Invoke the command handler for the parsed arguments."""
     try:
         args.func(args)
     except SmartKeyAuthUserException as exc:
@@ -580,10 +581,7 @@ def invoke_handler(progname, args):
 
 
 def main():
-    """
-    Entry
-    """
-
+    """Entry."""
     # -v enable additional messages, without this silence is golden
     # -vv enable debug messages like pretty print data used in transactions
     # -vvv like above but also include dump all data sent and received
@@ -593,9 +591,7 @@ def main():
     subparsers = parser.add_subparsers(title='subcommands')
 
     def register_cmd(name, help=None):
-        """
-        Register a top-level command.
-        """
+        """Register a top-level command."""
         newp = subparsers.add_parser(name, help=help)
         newp.set_defaults(func=get_handler(name))
         return newp

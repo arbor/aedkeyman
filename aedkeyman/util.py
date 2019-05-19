@@ -1,10 +1,6 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
 
-""" Misc helpers
-"""
+"""Miscellaneous helpers."""
 
 import base64
 import binascii
@@ -25,10 +21,7 @@ skey_to_openssl_ecnames = {
 
 
 def get_ec_pem(skey_ecname):
-    """
-    Given a curve name from SmartKey return a PEM blob (including BEGIN
-    and END)
-    """
+    """Given a curve name from SmartKey return a PEM string."""
     oname = skey_to_openssl_ecnames[skey_ecname]
 
     output = subprocess.check_output(['openssl', 'ecparam', '-name', oname])
@@ -36,10 +29,8 @@ def get_ec_pem(skey_ecname):
     return output.decode("ascii").strip()
 
 
-def find_first_bitstring(instream):
-    """ Traverse an asn1 decoder stream and Return the first
-    type that is a BitString.
-    """
+def _asn1_find_first_bitstring(instream):
+    """Traverse decoder stream and Return the first BitString."""
     value = None
     while not instream.eof():
         tag = instream.peek()
@@ -49,20 +40,22 @@ def find_first_bitstring(instream):
                 break
         elif tag.typ == asn1.Types.Constructed:
             instream.enter()
-            value = find_first_bitstring(instream)
+            value = _asn1_find_first_bitstring(instream)
             instream.leave()
 
     return value
 
 
 def pkcs8_to_pub(blob):
-    """ Return the first bitstring in an PKCS#8 blob.
+    """
+    Return the first bitstring given a body of text from PKCS#8.
+
     This has the effect of removing the version and algorithm ID
     so we are left with just the public key.
     """
     decoder = asn1.Decoder()
     decoder.start(base64.b64decode(blob))
-    firstbs = find_first_bitstring(decoder)
+    firstbs = _asn1_find_first_bitstring(decoder)
 
     pub = binascii.b2a_base64(firstbs[1:]).rstrip()
     return pub.decode('ascii')
