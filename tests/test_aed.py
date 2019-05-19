@@ -1,4 +1,5 @@
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
+
 """Test AED connection management and interface."""
 
 import sys
@@ -9,9 +10,9 @@ import aedkeyman
 import requests
 
 
-if sys.version_info >= (3, 3):
+try:
     from unittest.mock import patch, Mock, MagicMock
-else:
+except ImportError:
     from mock import patch, Mock, MagicMock
 
 

@@ -6,9 +6,9 @@ import unittest
 
 from aedkeyman import command_line
 
-if sys.version_info >= (3, 3):
+try:
     from unittest.mock import patch
-else:
+except ImportError:
     from mock import patch
 
 BASE_URL = 'https://www.smartkey.io/'

@@ -12,10 +12,9 @@ import aedkeyman
 
 import requests
 
-
-if sys.version_info >= (3, 3):
+try:
     from unittest.mock import mock_open, patch, Mock, MagicMock
-else:
+except ImportError:
     from mock import mock_open, patch, Mock, MagicMock
 
 BASE_URL = 'https://www.smartkey.io/'
