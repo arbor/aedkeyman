@@ -4,12 +4,14 @@
 #
 
 """Manage keys on Arbor Edge Defense and between third parties."""
+from __future__ import print_function
 
 import argparse
 import getpass
 import logging
 import os
 import sys
+from builtins import str
 from datetime import timedelta
 
 from aedkeyman import (
@@ -88,7 +90,7 @@ def cmd_skey_login(args):
     Create a new session by authenticating as a user.
     """
     if args.username is None:
-        print "Username: ",
+        print("Username: ", end=' ')
         username = sys.stdin.readline().strip()
     else:
         username = args.username
@@ -101,8 +103,8 @@ def cmd_skey_login(args):
     ska = SmartKey(**get_skey_kwargs(args))
     ttl = ska.auth_user(username, password, save=True)
 
-    print ("Session will expire in %s. Use the 'skey-logout' command to " +
-           "terminate it sooner.") % (timedelta(seconds=ttl),)
+    print(("Session will expire in %s. Use the 'skey-logout' command to "
+           + "terminate it sooner.") % (timedelta(seconds=ttl),))
 
     # Select the account to use. Some operations require this so we
     # do it automatically.
@@ -220,7 +222,7 @@ def cmd_skey_export_key(args):
     if (not args.out_file
             and not args.out_priv_file
             and not args.out_pub_file):
-        print blob
+        print(blob)
 
 
 def cmd_skey_list_accounts(args):
@@ -247,7 +249,7 @@ def cmd_skey_name_to_kid(args):
     if kid is None:
         output_and_exit("No key '%s' found" % (args.name,), error=True)
     else:
-        print kid
+        print(kid)
 
 
 def cmd_aed_list_keys(args):
@@ -261,14 +263,14 @@ def cmd_aed_import_ec_key(args):
         with open(args.in_file) as infile:
             blob = infile.read()
     else:
-        print "Enter EC Parameters and press ^d when done"
+        print("Enter EC Parameters and press ^d when done")
         params = sys.stdin.read()
-        print "Enter EC Private Key and press ^d when done"
+        print("Enter EC Private Key and press ^d when done")
         priv = sys.stdin.read()
         paramstext = wrap_text_begin_end("EC PARAMETERS", params.strip())
         privtext = wrap_text_begin_end("EC PRIVATE KEY", priv.strip())
         blob = "\n".join([paramstext, privtext])
-        print blob
+        print(blob)
 
     aed = ArborEdgeDefense(*get_aed_args(args))
     output_and_exit(aed.import_key(args.name, blob))
@@ -279,7 +281,7 @@ def cmd_aed_import_rsa_key(args):
         with open(args.in_priv_file) as infile:
             priv = infile.read().strip()
     else:
-        print "Enter RSA Private Key and press ^d when done"
+        print("Enter RSA Private Key and press ^d when done")
         priv = sys.stdin.read().strip()
 
     aed = ArborEdgeDefense(*get_aed_args(args))
@@ -368,8 +370,8 @@ def cmd_skey_list_keys(args):
     snames = set(skey['name'] for skey in ska_keys)
     anames = set(akey['name'] for akey in aed_keys)
     allnames = sorted(snames.union(anames))
-    print ("Name                                               Type" +
-           "         SmartKey AED")
+    print("Name                                               Type"
+          + "         SmartKey AED")
     for name in allnames:
         inskey = 'NO'
         inakey = 'NO'
@@ -386,7 +388,7 @@ def cmd_skey_list_keys(args):
             ktype = akeym[name]['type']
 
         fname = "%s %s" % (name, '.' * (49 - len(name)))
-        print "%-50s %-12s %-3s      %s" % (fname, ktype, inskey, inakey)
+        print("%-50s %-12s %-3s      %s" % (fname, ktype, inskey, inakey))
 
 
 def cmd_skey_sync_keys(args):
@@ -491,13 +493,13 @@ def output(data, error=False, indent=0):
         if data is not None:
             if isinstance(data, tuple) or isinstance(data, list):
                 if len(data) > 1:
-                    print >>sys.stderr, "Error: Multiple errors occured"
+                    print("Error: Multiple errors occured", file=sys.stderr)
                     for line in data:
-                        print >>sys.stderr, "\t%s" % (line,)
+                        print("\t%s" % (line,), file=sys.stderr)
                 else:
-                    print >>sys.stderr, "Error: %s" % (data[0],)
+                    print("Error: %s" % (data[0],), file=sys.stderr)
             else:
-                print >>sys.stderr, "Error: %s" % (data,)
+                print("Error: %s" % (data,), file=sys.stderr)
     else:
         istr = indent * ' '
         if data is not None:
@@ -514,18 +516,18 @@ def output(data, error=False, indent=0):
             elif isinstance(data, dict):
                 for key in sorted(data):
                     val = data[key]
-                    if (isinstance(val, dict) or isinstance(val, tuple) or
-                            isinstance(val, list)):
-                        print istr + "%s:" % (key,)
+                    if (isinstance(val, dict) or isinstance(val, tuple)
+                            or isinstance(val, list)):
+                        print(istr + "%s:" % (key,))
                         output(val, error, indent + indent_step)
                     else:
-                        print istr + "%s: %s" % (key, val)
+                        print(istr + "%s: %s" % (key, val))
                 # Print a new line to help separate the first level of
                 # objects we are displaying.
                 if indent == 0:
-                    print
+                    print()
             else:
-                print istr + data
+                print(istr + data)
 
 
 def exit(error):

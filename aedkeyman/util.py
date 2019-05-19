@@ -6,11 +6,11 @@
 """ Misc helpers
 """
 
-import asn1
 import base64
 import binascii
 import subprocess
 
+import asn1
 
 skey_to_openssl_ecnames = {
     'SecP192K1': 'secp192k1',
@@ -33,7 +33,7 @@ def get_ec_pem(skey_ecname):
 
     output = subprocess.check_output(['openssl', 'ecparam', '-name', oname])
 
-    return output.strip()
+    return output.decode("ascii").strip()
 
 
 def find_first_bitstring(instream):
@@ -62,6 +62,7 @@ def pkcs8_to_pub(blob):
     """
     decoder = asn1.Decoder()
     decoder.start(base64.b64decode(blob))
-    value = find_first_bitstring(decoder)
+    firstbs = find_first_bitstring(decoder)
 
-    return binascii.b2a_base64(value[1:]).rstrip()
+    pub = binascii.b2a_base64(firstbs[1:]).rstrip()
+    return pub.decode('ascii')

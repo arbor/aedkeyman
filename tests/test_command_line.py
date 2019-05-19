@@ -2,11 +2,15 @@
 Test aedkeyman proper
 """
 
+import sys
 import unittest
 
 from aedkeyman import command_line
 
-from mock import patch
+if sys.version_info >= (3, 3):
+    from unittest.mock import patch
+else:
+    from mock import patch
 
 BASE_URL = 'https://www.smartkey.io/'
 

@@ -6,16 +6,19 @@
 Manage a connection and interface with Equinix Smart Key to manage keys.
 """
 
-import os
-import stat
 import base64
-import requests
 import json
 import logging
+import os
 import pprint
+import stat
+from builtins import object
 
-APP_TOKEN_FILE = os.path.join(os.environ['HOME'], '.skey_app_token')
-USER_TOKEN_FILE = os.path.join(os.environ['HOME'], '.skey_user_token')
+import requests
+
+TOKEN_DIR = os.getenv('HOME', default='/tmp')
+APP_TOKEN_FILE = os.path.join(TOKEN_DIR, '.skey_app_token')
+USER_TOKEN_FILE = os.path.join(TOKEN_DIR, '.skey_user_token')
 
 
 class SmartKeyException(Exception):
@@ -245,9 +248,10 @@ class SmartKey(object):
         Authenticate and acquire bearer token to use for subsequent requests.
         """
         logging.info("Authenticating with SmartKey as a user")
-        encoded = base64.b64encode('%s:%s' % (username, password))
+        creds = '%s:%s' % (username, password)
+        encoded = base64.b64encode(creds.encode('ascii'))
         headers = {
-            'Authorization': 'Basic ' + encoded
+            'Authorization': 'Basic ' + encoded.decode('ascii'),
         }
         res = requests.request(method='POST',
                                url="%s/sys/v1/session/auth" % (self.baseurl,),
@@ -308,6 +312,7 @@ class SmartKey(object):
         with open(self.token_file, "w") as tfile:
             tfile.write(self.token)
 
+        # TODO: should create this with the mode bits first, then write it
         os.chmod(self.token_file, stat.S_IRUSR | stat.S_IWUSR)
 
     def _fetch_token(self):

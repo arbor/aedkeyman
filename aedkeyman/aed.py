@@ -8,9 +8,12 @@ Manage a connection and interface with Arbor Edge Defense to manage keys on
 the HSM.
 """
 
+import logging
+from builtins import object
+from builtins import str
+
 import requests
 from requests.exceptions import ConnectionError
-import logging
 
 
 class ArborEdgeDefenseException(Exception):

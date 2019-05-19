@@ -4,10 +4,19 @@
 # All rights reserved.  Proprietary and confidential.
 #
 
-from mock import patch, Mock, MagicMock
-import requests
+import sys
 import unittest
+
 import aedkeyman
+
+import requests
+
+
+if sys.version_info >= (3, 3):
+    from unittest.mock import patch, Mock, MagicMock
+else:
+    from mock import patch, Mock, MagicMock
+
 
 AED_HOST = 'nicotine.tb.arbor.net'
 AED_TOKEN = 'cOiEeOPFkKtLgPRagMbHd36ciDu7P2tWM_NqID6v'

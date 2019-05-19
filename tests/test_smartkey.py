@@ -3,13 +3,22 @@
 # All rights reserved.  Proprietary and confidential.
 #
 
-import stat
-import unittest
-from mock import patch, mock_open, Mock, MagicMock, call
-import requests
-import json
 import base64
+import json
+import stat
+import sys
+import unittest
+
+
 import aedkeyman
+
+import requests
+
+
+if sys.version_info >= (3, 3):
+    from unittest.mock import call, mock_open, patch, Mock, MagicMock
+else:
+    from mock import call, mock_open, patch, Mock, MagicMock
 
 BASE_URL = 'https://www.smartkey.io/'
 
@@ -177,13 +186,18 @@ list_cert1 = {
     "group_id": "8820a695-2476-431a-8aea-8f631624912d",
 }
 
+if sys.version_info.major == 3:
+    builtins_name = 'builtins'
+else:
+    builtins_name = '__builtin__'
+
 
 class SmartKeyTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = 8000
 
     @patch('aedkeyman.smartkey.requests.request')
-    @patch('__builtin__.open', new=mock_open(read_data=BEARER_TOKEN))
+    @patch('%s.open' % builtins_name, new=mock_open(read_data=BEARER_TOKEN))
     def test_00_init_with_apikey_and_tokenfile(self, mrequest):
         skey = aedkeyman.SmartKey(apikey=API_KEY)
         open.assert_called_with(aedkeyman.smartkey.APP_TOKEN_FILE)
@@ -191,7 +205,7 @@ class SmartKeyTestCase(unittest.TestCase):
 
     @patch('aedkeyman.smartkey.os.chmod')
     @patch('aedkeyman.smartkey.requests.request')
-    @patch('__builtin__.open')
+    @patch('%s.open' % builtins_name)
     def test_01_init_with_apikey_no_tokenfile(self, mopen, mrequest, mchmod):
         mrequest.return_value = Mock()
         mrequest.return_value.status_code = requests.codes.ok
@@ -210,13 +224,13 @@ class SmartKeyTestCase(unittest.TestCase):
                                   stat.S_IRUSR | stat.S_IWUSR)
 
     @patch('aedkeyman.smartkey.requests.request')
-    @patch('__builtin__.open', new=mock_open(read_data=BEARER_TOKEN))
+    @patch('%s.open' % builtins_name, new=mock_open(read_data=BEARER_TOKEN))
     def test_02_init_no_apikey_and_tokenfile(self, mrequest):
         skey = aedkeyman.SmartKey()
         open.assert_called_with(aedkeyman.smartkey.USER_TOKEN_FILE)
         self.assertEqual(skey.token, BEARER_TOKEN)
 
-    @patch('__builtin__.open')
+    @patch('%s.open' % builtins_name)
     def test_03_init_no_apikey_no_tokenfile(self, mopen):
         mopenw = MagicMock()
         # We want open to raise the first time only, for the token read
@@ -226,7 +240,7 @@ class SmartKeyTestCase(unittest.TestCase):
 
     @patch('aedkeyman.smartkey.os.chmod')
     @patch('aedkeyman.smartkey.requests.request')
-    @patch('__builtin__.open')
+    @patch('%s.open' % builtins_name)
     def test_04_user_auth_no_tokenfile_save(self, mopen, mrequest, mchmod):
         mrequest.return_value = Mock()
         mrequest.return_value.status_code = requests.codes.ok
@@ -240,9 +254,10 @@ class SmartKeyTestCase(unittest.TestCase):
         password = 'passw0rd'
         skey.auth_user(username, password, save=True)
         self.assertEqual(skey.token, BEARER_TOKEN)
-        encoded = base64.b64encode('%s:%s' % (username, password))
+        creds = '%s:%s' % (username, password)
+        encoded = base64.b64encode(creds.encode('ascii'))
         headers = {
-            'Authorization': 'Basic ' + encoded
+            'Authorization': 'Basic ' + encoded.decode('ascii'),
         }
         mrequest.assert_called_with(headers=headers, method='POST',
                                     url=BASE_URL + 'sys/v1/session/auth')
@@ -252,7 +267,7 @@ class SmartKeyTestCase(unittest.TestCase):
                                   stat.S_IRUSR | stat.S_IWUSR)
 
     @patch('aedkeyman.smartkey.requests.request')
-    @patch('__builtin__.open')
+    @patch('%s.open' % builtins_name)
     def test_05_user_auth_no_tokenfile_no_save(self, mopen, mrequest):
         mrequest.return_value = Mock()
         mrequest.return_value.status_code = requests.codes.ok
@@ -266,9 +281,10 @@ class SmartKeyTestCase(unittest.TestCase):
         password = 'passw0rd'
         skey.auth_user(username, password, save=False)
         self.assertEqual(skey.token, BEARER_TOKEN)
-        encoded = base64.b64encode('%s:%s' % (username, password))
+        creds = '%s:%s' % (username, password)
+        encoded = base64.b64encode(creds.encode('ascii'))
         headers = {
-            'Authorization': 'Basic ' + encoded
+            'Authorization': 'Basic ' + encoded.decode('ascii')
         }
         mrequest.assert_called_with(headers=headers, method='POST',
                                     url=BASE_URL + 'sys/v1/session/auth')
