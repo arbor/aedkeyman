@@ -287,11 +287,10 @@ class SmartKey(object):
     def _save_token(self):
         """Save the auth token to disk to use it in the future."""
         # TODO: use NamedTemporaryFile() and move in to place
-        with open(self.token_file, "w") as tfile:
-            tfile.write(self.token)
-
-        # TODO: should create this with the mode bits first, then write it
-        os.chmod(self.token_file, stat.S_IRUSR | stat.S_IWUSR)
+        fd = os.open(self.token_file, os.O_CREAT | os.O_WRONLY,
+                     0o600)
+        os.write(fd, self.token.encode())
+        os.close(fd)
 
     def _fetch_token(self):
         """Return saved auth token or fetch a new one."""

@@ -4,7 +4,6 @@
 
 import base64
 import json
-import stat
 import sys
 import unittest
 
@@ -15,9 +14,9 @@ import requests
 
 
 if sys.version_info >= (3, 3):
-    from unittest.mock import call, mock_open, patch, Mock, MagicMock
+    from unittest.mock import mock_open, patch, Mock, MagicMock
 else:
-    from mock import call, mock_open, patch, Mock, MagicMock
+    from mock import mock_open, patch, Mock, MagicMock
 
 BASE_URL = 'https://www.smartkey.io/'
 
@@ -202,10 +201,9 @@ class SmartKeyTestCase(unittest.TestCase):
         open.assert_called_with(aedkeyman.smartkey.APP_TOKEN_FILE)
         self.assertEqual(skey.token, BEARER_TOKEN)
 
-    @patch('aedkeyman.smartkey.os.chmod')
     @patch('aedkeyman.smartkey.requests.request')
     @patch('%s.open' % builtins_name)
-    def test_01_init_with_apikey_no_tokenfile(self, mopen, mrequest, mchmod):
+    def test_01_init_with_apikey_no_tokenfile(self, mopen, mrequest):
         mrequest.return_value = Mock()
         mrequest.return_value.status_code = requests.codes.ok
         mrequest.return_value.text = ('{"access_token": "%s"}' % BEARER_TOKEN)
@@ -219,8 +217,6 @@ class SmartKeyTestCase(unittest.TestCase):
         }
         mrequest.assert_called_with(headers=headers, method='POST',
                                     url=BASE_URL + 'sys/v1/session/auth')
-        mchmod.assert_called_with(aedkeyman.smartkey.APP_TOKEN_FILE,
-                                  stat.S_IRUSR | stat.S_IWUSR)
 
     @patch('aedkeyman.smartkey.requests.request')
     @patch('%s.open' % builtins_name, new=mock_open(read_data=BEARER_TOKEN))
@@ -237,17 +233,21 @@ class SmartKeyTestCase(unittest.TestCase):
         skey = aedkeyman.SmartKey()
         self.assertIsNone(skey.token)
 
-    @patch('aedkeyman.smartkey.os.chmod')
     @patch('aedkeyman.smartkey.requests.request')
+    @patch('aedkeyman.smartkey.os.close')
+    @patch('aedkeyman.smartkey.os.write')
+    @patch('aedkeyman.smartkey.os.open')
     @patch('%s.open' % builtins_name)
-    def test_04_user_auth_no_tokenfile_save(self, mopen, mrequest, mchmod):
+    def test_04_user_auth_no_tokenfile_save(self, mopen, mosopen, moswrite,
+                                            mosclose, mrequest):
         mrequest.return_value = Mock()
         mrequest.return_value.status_code = requests.codes.ok
         mrequest.return_value.text = (
             '{"access_token": "%s","expires_in": 6000}' % BEARER_TOKEN)
-        mopenw = MagicMock()
+
         # We want open to raise the first time only, for the token read
-        mopen.side_effect = (IOError("No such file"), mopenw)
+        mopen.side_effect = IOError("No such file")
+        mosopen.return_value = 99
         skey = aedkeyman.SmartKey()
         username = 'justin'
         password = 'passw0rd'
@@ -260,10 +260,9 @@ class SmartKeyTestCase(unittest.TestCase):
         }
         mrequest.assert_called_with(headers=headers, method='POST',
                                     url=BASE_URL + 'sys/v1/session/auth')
-        mopen.assert_has_calls((call(aedkeyman.smartkey.USER_TOKEN_FILE),
-                                call(aedkeyman.smartkey.USER_TOKEN_FILE, "w")))
-        mchmod.assert_called_with(aedkeyman.smartkey.USER_TOKEN_FILE,
-                                  stat.S_IRUSR | stat.S_IWUSR)
+        mopen.assert_called_with(aedkeyman.smartkey.USER_TOKEN_FILE)
+        moswrite.assert_called_with(99, BEARER_TOKEN.encode())
+        mosclose.assert_called_with(99)
 
     @patch('aedkeyman.smartkey.requests.request')
     @patch('%s.open' % builtins_name)
