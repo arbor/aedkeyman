@@ -1,9 +1,7 @@
-#
 # Copyright (c) 2019 NETSCOUT Systems, Inc.
-# All rights reserved.  Proprietary and confidential.
-#
 
 """Manage keys on Arbor Edge Defense and between third parties."""
+
 from __future__ import print_function
 
 import argparse
@@ -67,22 +65,39 @@ def get_aed_args(args):
         raise MissingConfigException("Set AED_TOKEN to the API TOKEN"
                                      + "for Arbor AED")
 
-    hsm_user = os.getenv('AED_HSM_USER')
-    if hsm_user is None:
-        raise MissingConfigException("Set AED_HSM_USER to the HSM crypto"
-                                     + "user for Arbor AED")
+    use_hsm = os.getenv('AED_USE_HSM', 'false')
+    if use_hsm == 'true':
+        use_hsm = True
+        hsm_user = os.getenv('AED_HSM_USER')
+        if hsm_user is None:
+            raise MissingConfigException("Set AED_HSM_USER to the HSM crypto"
+                                         + " user for Arbor AED")
 
-    hsm_pass = os.getenv('AED_HSM_PASS')
-    if hsm_pass is None:
-        raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto"
-                                     + "user password for Arbor AED")
+        hsm_pass = os.getenv('AED_HSM_PASS')
+        if hsm_pass is None:
+            raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto"
+                                         + " user password for Arbor AED")
+
+        creds = {
+            'hsm_user': hsm_user,
+            'hsm_pass': hsm_pass,
+        }
+    else:
+        use_hsm = False
+        keystore_pass = os.getenv('AED_KEYSTORE_PASS')
+        if keystore_pass is None:
+            raise MissingConfigException("Set AED_KEYSTORE_PASS to the "
+                                         + "passphrase for the AED keystore")
+        creds = {
+            'keystore_pass': keystore_pass,
+        }
 
     if os.getenv('AED_DISABLE_CERT_VERIFY', 'false') == 'true':
         disable_cert_verify = True
     else:
         disable_cert_verify = False
 
-    return (hostname, token, hsm_user, hsm_pass, disable_cert_verify)
+    return (hostname, token, creds, use_hsm, disable_cert_verify)
 
 
 def cmd_skey_login(args):
@@ -405,12 +420,17 @@ def cmd_skey_sync_keys(args):
     aed_keys = aed.list_keys()
     ska_keys = ska.list_keys()
 
-    aedpubs = set([akey['public'] for akey in aed_keys])
+    aedpubs = {akey['public'] for akey in aed_keys}
     for key in ska_keys:
         name = key['name']
         ktype = key['obj_type']
         # Skip non-RSA or EC types such as CERTIFICATE and DES3 types
         if ktype != 'RSA' and ktype != 'EC':
+            continue
+
+        if ktype == 'EC' and key['elliptic_curve'] not in elliptic_curves:
+            logging.warn('key %s has unsupported curve %s'
+                         % (name, key['elliptic_curve']))
             continue
 
         # Skip keys that lack the required permissions (key_ops)
@@ -435,10 +455,6 @@ def cmd_skey_sync_keys(args):
                 msg = "%s (%s)" % (exc, name)
                 output_error(msg)
                 continue
-
-            if pub != data['pub_key']:
-                logging.warn("Public mismatch during export on key %s" %
-                             name)
 
             priv = wrap_text_begin_end("RSA PRIVATE KEY", data['value'])
         elif ktype == 'EC':

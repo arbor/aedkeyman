@@ -3,6 +3,7 @@
 """Manage keys on Arbor Edge Defense."""
 
 import logging
+import pprint
 from builtins import object
 from builtins import str
 
@@ -19,7 +20,7 @@ class ArborEdgeDefenseException(Exception):
 class ArborEdgeDefense(object):
     """Manage Keys on AED."""
 
-    def __init__(self, hostname, token, hsm_user, hsm_pass,
+    def __init__(self, hostname, token, creds, use_hsm=False,
                  disable_cert_verify=False):
         """
         Initialize an instance.
@@ -27,13 +28,20 @@ class ArborEdgeDefense(object):
         hsm_user -- crypto user name
         hsm_user -- crypto user password
         token -- API token
+        use_hsm -- True if using an HSM vs newer Crypto Accelerator Module
         disable_cert_verify -- disable verification AED cert (LAB USE)
         """
         self.token = token
-        self.hsm_user = hsm_user
-        self.hsm_pass = hsm_pass
+        self.creds = creds
         self.baseurl = 'https://%s/api/aps/v2' % (hostname,)
         self.verify = not disable_cert_verify
+
+        # path to the certificate API end-points
+        self.use_hsm = use_hsm
+        if use_hsm:
+            self.certpath = '/hsm/certificates/'
+        else:
+            self.certpath = '/crypto/certificates/'
 
     def import_key(self, name, priv, cert=None):
         """Import a key."""
@@ -42,21 +50,20 @@ class ArborEdgeDefense(object):
             'privateKey': priv,
             'certificate': cert,
         }
-        res = self._request('POST', "/hsm/certificates/",
-                            body)
+        res = self._request('POST', self.certpath, body)
 
         if res.status_code != 201:
             self._raise_errors(res)
 
     def delete_key(self, name):
         """Delete a key."""
-        res = self._request('DELETE', "/hsm/certificates/" + name)
+        res = self._request('DELETE', self.certpath + name)
         if res.status_code != 204:
             self._raise_errors(res)
 
     def list_keys(self):
         """List keys."""
-        res = self._request('GET', "/hsm/certificates/", data={'details': 1})
+        res = self._request('GET', self.certpath, data={'details': 1})
         if res.status_code != 200:
             self._raise_errors(res)
 
@@ -86,25 +93,33 @@ class ArborEdgeDefense(object):
 
     def _request(self, method, url_suffix, data=None):
         """Issue a request."""
-        logging.debug("%s %s\n%s" % (method, self.baseurl + url_suffix, data))
         headers = {
             'X-Arbux-APIToken': self.token,
-            'X-Arbux-HSMUsername': self.hsm_user,
-            'X-Arbux-HSMPassword': self.hsm_pass,
         }
+
+        if self.use_hsm:
+            headers['X-Arbux-HSMUsername'] = self.creds['hsm_user']
+            headers['X-Arbux-HSMPassword'] = self.creds['hsm_pass']
+        else:
+            headers['X-Arbux-KeystorePass'] = self.creds['keystore_pass']
+
+        url = self.baseurl + url_suffix
+        logging.debug("%s %s" % (method, url))
+        logging.debug("HEADERS: %s" % pprint.pformat(headers))
+        logging.debug("BODY: %s" % data)
 
         try:
             if method == 'POST':
-                result = requests.post(url=self.baseurl + url_suffix,
+                result = requests.post(url=url,
                                        headers=headers,
                                        json=data,
                                        verify=self.verify)
             elif method == 'GET':
-                result = requests.get(url=self.baseurl + url_suffix,
+                result = requests.get(url=url,
                                       headers=headers, params=data,
                                       verify=self.verify)
             elif method == 'DELETE':
-                result = requests.delete(url=self.baseurl + url_suffix,
+                result = requests.delete(url=url,
                                          headers=headers, verify=self.verify)
         except ConnectionError as exc:
             # TODO: should clean this up
