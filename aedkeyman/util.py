@@ -65,4 +65,4 @@ def wrap_text_begin_end(title, body):
     """Wrap a block of text with BEGIN and END for PEM formatting."""
     return ("-----BEGIN %s-----\n" % (title,)
             + body
-            + "\n-----END %s-----" % (title,))
+            + "\n-----END %s-----\n" % (title,))

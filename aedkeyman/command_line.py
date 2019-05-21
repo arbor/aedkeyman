@@ -468,7 +468,7 @@ def cmd_skey_sync_keys(args):
 
             curve_name = key['elliptic_curve']
             ecparams = get_ec_pem(curve_name)
-            value = wrap_text_begin_end("PRIVATE KEY", data['value'])
+            value = wrap_text_begin_end("EC PRIVATE KEY", data['value'])
             priv = "\n".join((ecparams, value))
 
         try:

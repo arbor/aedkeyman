@@ -261,7 +261,7 @@ class KeyManTestCase(unittest.TestCase):
         self.assertEqual(aed_import_key.call_count, 2)
         aed_import_key.assert_any_call('testkey2048',
                                        ("-----BEGIN RSA PRIVATE KEY-----\n"
-                                        + "%s\n-----END RSA PRIVATE KEY-----")
+                                        + "%s\n-----END RSA PRIVATE KEY-----\n")
                                        % rsa2048_priv)
 
         aed_import_key.assert_any_call('nist256',
@@ -269,7 +269,7 @@ class KeyManTestCase(unittest.TestCase):
                                         + "BggqhkjOPQMBBw==\n"
                                         + "-----END EC PARAMETERS-----\n-----"
                                         + "BEGIN EC PRIVATE KEY-----\n%s\n---"
-                                        + "--END EC PRIVATE KEY-----") %
+                                        + "--END EC PRIVATE KEY-----\n") %
                                        nist256_priv)
 
     @patch('aedkeyman.smartkey.SmartKey.export_key')
@@ -472,7 +472,7 @@ class KeyManTestCase(unittest.TestCase):
         ska_export_key.assert_called_with(
             '6e7b1ebb-7f66-423e-8a57-1074f407341d')
 
-        # Make sure import was called twice with the correct data
+        # Make sure import was called once with the correct data
         self.assertEqual(aed_import_key.call_count, 1)
         aed_import_key.assert_called_with(
             'nist256', (
@@ -480,7 +480,7 @@ class KeyManTestCase(unittest.TestCase):
                  + "BggqhkjOPQMBBw==\n"
                  + "-----END EC PARAMETERS-----\n-----"
                  + "BEGIN EC PRIVATE KEY-----\n%s\n---"
-                 + "--END EC PRIVATE KEY-----") %
+                 + "--END EC PRIVATE KEY-----\n") %
                 nist256_priv))
 
 

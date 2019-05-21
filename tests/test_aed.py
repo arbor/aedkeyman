@@ -33,8 +33,9 @@ HEADERS = {
 class ArborEdgeDefenseTestCase(unittest.TestCase):
     @patch('aedkeyman.aed.requests.post')
     def test_00_import_rsa_key_success(self, mpost):
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         expected_rdata = {
             "label": "newrsa",
             "type": "RSA",
@@ -155,8 +156,9 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
     @patch('aedkeyman.aed.requests.post')
     def test_import_rsa_key_fail(self, mpost):
         """Test that import raises when a public key is given as private."""
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         expected_rdata = {
             "errors": [
                 {
@@ -207,8 +209,9 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
 
     @patch('aedkeyman.aed.requests.get')
     def test_list_keys_success(self, mget):
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         req_data = {
             'details': 1,
         }
@@ -278,8 +281,9 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
 
     @patch('aedkeyman.aed.requests.get')
     def test_list_keys_hsm_auth_error(self, mget):
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         req_data = {
             'details': 1,
         }
@@ -308,8 +312,9 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
 
     @patch('aedkeyman.aed.requests.delete')
     def test_delete_key_success(self, mdel):
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         mresp = MagicMock()
         mresp.status_code = 204
         mresp.json = Mock(return_value=None)
@@ -320,8 +325,9 @@ class ArborEdgeDefenseTestCase(unittest.TestCase):
 
     @patch('aedkeyman.aed.requests.delete')
     def test_delete_key_fail(self, mdel):
-        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN,
-                                         AED_USER, AED_PASS)
+        creds = {'hsm_user': AED_USER, 'hsm_pass': AED_PASS}
+        aed = aedkeyman.ArborEdgeDefense(AED_HOST, AED_TOKEN, creds,
+                                         use_hsm=True)
         expected_rdata = {
             "errors": [
                 {
