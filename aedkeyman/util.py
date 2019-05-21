@@ -59,3 +59,10 @@ def pkcs8_to_pub(blob):
 
     pub = binascii.b2a_base64(firstbs[1:]).rstrip()
     return pub.decode('ascii')
+
+
+def wrap_text_begin_end(title, body):
+    """Wrap a block of text with BEGIN and END for PEM formatting."""
+    return ("-----BEGIN %s-----\n" % (title,)
+            + body
+            + "\n-----END %s-----" % (title,))

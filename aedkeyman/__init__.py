@@ -11,4 +11,5 @@ from .smartkey import (SmartKey,                                   # noqa: F401
                        SmartKeyNeedsAcctSelectException,
                        SmartKeyNeedsAuthException)
 from .util import (get_ec_pem,                                     # noqa: F401
-                   pkcs8_to_pub)
+                   pkcs8_to_pub,
+                   wrap_text_begin_end)

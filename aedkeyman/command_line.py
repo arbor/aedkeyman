@@ -22,7 +22,8 @@ from aedkeyman import (
     SmartKeyNeedsAcctSelectException,
     SmartKeyNeedsAuthException,
     get_ec_pem,
-    pkcs8_to_pub)
+    pkcs8_to_pub,
+    wrap_text_begin_end)
 
 
 # How much to indent hierarchical output
@@ -467,7 +468,7 @@ def cmd_skey_sync_keys(args):
 
             curve_name = key['elliptic_curve']
             ecparams = get_ec_pem(curve_name)
-            value = wrap_text_begin_end("EC PRIVATE KEY", data['value'])
+            value = wrap_text_begin_end("PRIVATE KEY", data['value'])
             priv = "\n".join((ecparams, value))
 
         try:
@@ -476,13 +477,6 @@ def cmd_skey_sync_keys(args):
             msg = "Failed to import '%s' on AED: %s" % (name, exc)
             output_error(msg)
             continue
-
-
-def wrap_text_begin_end(title, body):
-    """Wrap a block of text with BEGIN and END for PEM formatting."""
-    return ("-----BEGIN %s-----\n" % (title,)
-            + body
-            + "\n-----END %s-----" % (title,))
 
 
 def output_and_exit(data, error=False):
