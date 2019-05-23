@@ -2,6 +2,7 @@
 
 """Exceptions and constants shared by submodules."""
 
+
 class MissingConfigException(Exception):
     """Raise when required configuration is missing."""
 

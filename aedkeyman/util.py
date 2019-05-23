@@ -9,14 +9,14 @@ import subprocess
 import asn1
 
 skey_to_openssl_ecnames = {
-    'SecP192K1': 'secp192k1',
-    'SecP224K1': 'secp224k1',
-    'SecP256K1': 'secp256k1',
-    'NistP192': 'prime192v1',
-    'NistP224': 'secp224r1',
-    'NistP256': 'prime256v1',
-    'NistP384': 'secp384r1',
-    'NistP521': 'secp521r1',
+    "SecP192K1": "secp192k1",
+    "SecP224K1": "secp224k1",
+    "SecP256K1": "secp256k1",
+    "NistP192": "prime192v1",
+    "NistP224": "secp224r1",
+    "NistP256": "prime256v1",
+    "NistP384": "secp384r1",
+    "NistP521": "secp521r1",
 }
 
 
@@ -24,7 +24,7 @@ def get_ec_pem(skey_ecname):
     """Given a curve name from SmartKey return a PEM string."""
     oname = skey_to_openssl_ecnames[skey_ecname]
 
-    output = subprocess.check_output(['openssl', 'ecparam', '-name', oname])
+    output = subprocess.check_output(["openssl", "ecparam", "-name", oname])
 
     return output.decode("ascii").strip()
 
@@ -58,11 +58,13 @@ def pkcs8_to_pub(blob):
     firstbs = _asn1_find_first_bitstring(decoder)
 
     pub = binascii.b2a_base64(firstbs[1:]).rstrip()
-    return pub.decode('ascii')
+    return pub.decode("ascii")
 
 
 def wrap_text_begin_end(title, body):
     """Wrap a block of text with BEGIN and END for PEM formatting."""
-    return ("-----BEGIN %s-----\n" % (title,)
-            + body
-            + "\n-----END %s-----\n" % (title,))
+    return (
+        "-----BEGIN %s-----\n" % (title,)
+        + body
+        + "\n-----END %s-----\n" % (title,)
+    )

@@ -23,7 +23,8 @@ from aedkeyman import (
     SmartKeyNeedsAuthException,
     get_ec_pem,
     pkcs8_to_pub,
-    wrap_text_begin_end)
+    wrap_text_begin_end,
+)
 
 
 # How much to indent hierarchical output
@@ -34,7 +35,7 @@ err_count = 0
 
 # What elliptic curves to support -- the old HSM on AED only supports
 # a few.
-elliptic_curves = ('NistP192', 'NistP256', 'NistP384')
+elliptic_curves = ("NistP192", "NistP256", "NistP384")
 
 
 def get_skey_kwargs(args):
@@ -44,9 +45,7 @@ def get_skey_kwargs(args):
     # environment. This will authenticate as an application and avoid prompting
     # the user.
     #
-    kwargs = {
-        'apikey': os.getenv('SKEY_API_KEY'),
-    }
+    kwargs = {"apikey": os.getenv("SKEY_API_KEY")}
     return kwargs
 
 
@@ -57,43 +56,45 @@ def get_aed_args(args):
     # environment. This will authenticate as an application and avoid prompting
     # the user.
     #
-    hostname = os.getenv('AED_HOST')
+    hostname = os.getenv("AED_HOST")
     if hostname is None:
-        raise MissingConfigException("Set AED_HOST to the hostname "
-                                     + "of Arbor AED")
-    token = os.getenv('AED_TOKEN')
+        raise MissingConfigException(
+            "Set AED_HOST to the hostname " + "of Arbor AED"
+        )
+    token = os.getenv("AED_TOKEN")
     if token is None:
-        raise MissingConfigException("Set AED_TOKEN to the API TOKEN"
-                                     + "for Arbor AED")
+        raise MissingConfigException(
+            "Set AED_TOKEN to the API TOKEN" + "for Arbor AED"
+        )
 
-    use_hsm = os.getenv('AED_USE_HSM', 'false')
-    if use_hsm == 'true':
+    use_hsm = os.getenv("AED_USE_HSM", "false")
+    if use_hsm == "true":
         use_hsm = True
-        hsm_user = os.getenv('AED_HSM_USER')
+        hsm_user = os.getenv("AED_HSM_USER")
         if hsm_user is None:
-            raise MissingConfigException("Set AED_HSM_USER to the HSM crypto"
-                                         + " user for Arbor AED")
+            raise MissingConfigException(
+                "Set AED_HSM_USER to the HSM crypto" + " user for Arbor AED"
+            )
 
-        hsm_pass = os.getenv('AED_HSM_PASS')
+        hsm_pass = os.getenv("AED_HSM_PASS")
         if hsm_pass is None:
-            raise MissingConfigException("Set AED_HSM_PASS to the HSM crypto"
-                                         + " user password for Arbor AED")
+            raise MissingConfigException(
+                "Set AED_HSM_PASS to the HSM crypto"
+                + " user password for Arbor AED"
+            )
 
-        creds = {
-            'hsm_user': hsm_user,
-            'hsm_pass': hsm_pass,
-        }
+        creds = {"hsm_user": hsm_user, "hsm_pass": hsm_pass}
     else:
         use_hsm = False
-        keystore_pass = os.getenv('AED_KEYSTORE_PASS')
+        keystore_pass = os.getenv("AED_KEYSTORE_PASS")
         if keystore_pass is None:
-            raise MissingConfigException("Set AED_KEYSTORE_PASS to the "
-                                         + "passphrase for the AED keystore")
-        creds = {
-            'keystore_pass': keystore_pass,
-        }
+            raise MissingConfigException(
+                "Set AED_KEYSTORE_PASS to the "
+                + "passphrase for the AED keystore"
+            )
+        creds = {"keystore_pass": keystore_pass}
 
-    if os.getenv('AED_DISABLE_CERT_VERIFY', 'false') == 'true':
+    if os.getenv("AED_DISABLE_CERT_VERIFY", "false") == "true":
         disable_cert_verify = True
     else:
         disable_cert_verify = False
@@ -104,7 +105,7 @@ def get_aed_args(args):
 def cmd_skey_login(args):
     """Create a new session by authenticating as a user."""
     if args.username is None:
-        print("Username: ", end=' ')
+        print("Username: ", end=" ")
         username = sys.stdin.readline().strip()
     else:
         username = args.username
@@ -117,8 +118,13 @@ def cmd_skey_login(args):
     ska = SmartKey(**get_skey_kwargs(args))
     ttl = ska.auth_user(username, password, save=True)
 
-    print(("Session will expire in %s. Use the 'skey-logout' command to "
-           + "terminate it sooner.") % (timedelta(seconds=ttl),))
+    print(
+        (
+            "Session will expire in %s. Use the 'skey-logout' command to "
+            + "terminate it sooner."
+        )
+        % (timedelta(seconds=ttl),)
+    )
 
     # Select the account to use. Some operations require this so we
     # do it automatically.
@@ -129,7 +135,7 @@ def cmd_skey_login(args):
         accounts = ska.list_accounts()
         if len(accounts) > 1:
             logging.warn("Multiple accounts available, using the first one")
-        acid = accounts[0]['acct_id']
+        acid = accounts[0]["acct_id"]
         logging.debug("Selecting account %s" % acid)
         output_and_exit(ska.select_account(acid))
 
@@ -143,8 +149,9 @@ def cmd_skey_logout(args):
 def cmd_skey_gen_ec_key(args):
     """Generate an elliptic curve key on SmartKey."""
     ska = SmartKey(**get_skey_kwargs(args))
-    output_and_exit(ska.generate_ec_key(args.name, args.curve,
-                                        args.group_id, args.desc))
+    output_and_exit(
+        ska.generate_ec_key(args.name, args.curve, args.group_id, args.desc)
+    )
 
 
 def cmd_skey_show_key(args):
@@ -164,8 +171,8 @@ def cmd_skey_delete_key(args):
     if args.all:
         ska_keys = ska.list_keys()
         for key in ska_keys:
-            name = key['name']
-            kid = key['kid']
+            name = key["name"]
+            kid = key["kid"]
             try:
                 output_and_exit(ska.delete_key(kid))
             except SmartKeyException as exc:
@@ -177,10 +184,12 @@ def cmd_skey_delete_key(args):
                 except ArborEdgeDefenseException as exc:
                     msg = "Failed to delete '%s' on AED: %s" % (name, exc)
                     output_error(msg)
-    elif args.kid:
-        if args.update_aed:
-            msg = ("With --update-aed the key must be specified by name" %
-                   (name,))
+            elif args.kid:
+                if args.update_aed:
+                    msg = (
+                        "With --update-aed the key must be specified by name"
+                        % (name,)
+                    )
             output_and_exit(msg, error=True)
         else:
             output_and_exit(ska.delete_key(args.kid))
@@ -211,14 +220,14 @@ def cmd_skey_export_key(args):
     ska = SmartKey(**get_skey_kwargs(args))
 
     data = ska.export_key(args.kid)
-    if data['obj_type'] == 'RSA':
-        pub = wrap_text_begin_end("RSA PUBLIC KEY", data['pub_key'])
-        priv = wrap_text_begin_end("RSA PRIVATE KEY", data['value'])
+    if data["obj_type"] == "RSA":
+        pub = wrap_text_begin_end("RSA PUBLIC KEY", data["pub_key"])
+        priv = wrap_text_begin_end("RSA PRIVATE KEY", data["value"])
         blob = "\n".join([pub, priv])
-    elif data['obj_type'] == 'EC':
-        pub = wrap_text_begin_end("PUBLIC KEY", data['pub_key'])
-        priv = wrap_text_begin_end("EC PRIVATE KEY", data['value'])
-        ecparams = get_ec_pem(data['elliptic_curve'])
+    elif data["obj_type"] == "EC":
+        pub = wrap_text_begin_end("PUBLIC KEY", data["pub_key"])
+        priv = wrap_text_begin_end("EC PRIVATE KEY", data["value"])
+        ecparams = get_ec_pem(data["elliptic_curve"])
         blob = "\n".join([ecparams, priv, pub])
 
     if args.out_file is not None:
@@ -235,9 +244,7 @@ def cmd_skey_export_key(args):
 
     # If there is any output being written to a file, suppress
     # normal program output
-    if (not args.out_file
-            and not args.out_priv_file
-            and not args.out_pub_file):
+    if not args.out_file and not args.out_priv_file and not args.out_pub_file:
         print(blob)
 
 
@@ -257,7 +264,7 @@ def name_to_skey_id(ska, name):
     """Lookup a key and return the associated key id (kid)."""
     data = ska.list_keys(name=name)
     if len(data) > 0:
-        return data[0]['kid']
+        return data[0]["kid"]
     else:
         return None
 
@@ -318,7 +325,7 @@ def cmd_aed_delete_key(args):
         aed_keys = aed.list_keys()
 
         for akey in aed_keys:
-            name = akey['name']
+            name = akey["name"]
             try:
                 aed.delete_key(name)
             except ArborEdgeDefenseException as exc:
@@ -334,8 +341,7 @@ def cmd_aed_delete_key(args):
 
 def cmd_skey_gen_rsa_key(args):
     ska = SmartKey(**get_skey_kwargs(args))
-    data = ska.generate_rsa_key(args.name, args.size, args.desc,
-                                args.group_id)
+    data = ska.generate_rsa_key(args.name, args.size, args.desc, args.group_id)
     kid = data
     try:
         data = ska.export_key(kid)
@@ -354,7 +360,7 @@ def cmd_skey_gen_rsa_key(args):
 
     if args.update_aed:
         aed = ArborEdgeDefense(*get_aed_args(args))
-        priv = wrap_text_begin_end("RSA PRIVATE KEY", data['value'])
+        priv = wrap_text_begin_end("RSA PRIVATE KEY", data["value"])
         try:
             aed.import_key(args.name, priv)
         except ArborEdgeDefenseException as exc:
@@ -384,33 +390,35 @@ def cmd_skey_list_keys(args):
         output_and_exit(ska_keys)
 
     for key in ska_keys:
-        skeym[key['name']] = key
+        skeym[key["name"]] = key
     for key in aed_keys:
-        akeym[key['name']] = key
+        akeym[key["name"]] = key
 
     # TODO: this doesn't support when you have multiple keys with the same
     # name in SmartKey.
-    snames = {skey['name'] for skey in ska_keys}
-    anames = {akey['name'] for akey in aed_keys}
+    snames = {skey["name"] for skey in ska_keys}
+    anames = {akey["name"] for akey in aed_keys}
     allnames = sorted(snames.union(anames))
-    print("Name                                               Type"
-          + "         SmartKey AED")
+    print(
+        "Name                                               Type"
+        + "         SmartKey AED"
+    )
     for name in allnames:
-        inskey = 'NO'
-        inakey = 'NO'
+        inskey = "NO"
+        inakey = "NO"
         if name in snames:
-            inskey = 'YES'
-            ktype = skeym[name]['obj_type']
-            if ktype == 'CERTIFICATE':
-                ktype = skeym[name]['obj_type']
+            inskey = "YES"
+            ktype = skeym[name]["obj_type"]
+            if ktype == "CERTIFICATE":
+                ktype = skeym[name]["obj_type"]
                 # See if there is a stored public key from AED that matches
                 # for aedkey in aed_keys:
                 #    if aedkey
         if name in anames:
-            inakey = 'YES'
-            ktype = akeym[name]['type']
+            inakey = "YES"
+            ktype = akeym[name]["type"]
 
-        fname = "%s %s" % (name, '.' * (49 - len(name)))
+        fname = "%s %s" % (name, "." * (49 - len(name)))
         print("%-50s %-12s %-3s      %s" % (fname, ktype, inskey, inakey))
 
 
@@ -421,35 +429,38 @@ def cmd_skey_sync_keys(args):
     aed_keys = aed.list_keys()
     ska_keys = ska.list_keys()
 
-    aedpubs = {akey['public'] for akey in aed_keys}
+    aedpubs = {akey["public"] for akey in aed_keys}
     for key in ska_keys:
-        name = key['name']
-        ktype = key['obj_type']
+        name = key["name"]
+        ktype = key["obj_type"]
         # Skip non-RSA or EC types such as CERTIFICATE and DES3 types
-        if ktype != 'RSA' and ktype != 'EC':
+        if ktype != "RSA" and ktype != "EC":
             continue
 
-        if ktype == 'EC' and key['elliptic_curve'] not in elliptic_curves:
-            logging.warn('key %s has unsupported curve %s'
-                         % (name, key['elliptic_curve']))
+        if ktype == "EC" and key["elliptic_curve"] not in elliptic_curves:
+            logging.warn(
+                "key %s has unsupported curve %s"
+                % (name, key["elliptic_curve"])
+            )
             continue
 
         # Skip keys that lack the required permissions (key_ops)
-        key_ops = key['key_ops']
-        if ('EXPORT' not in key_ops) or ('APPMANAGEABLE' not in key_ops):
-            logging.debug("key %s does not have the necessary permissions" %
-                          (name,))
+        key_ops = key["key_ops"]
+        if ("EXPORT" not in key_ops) or ("APPMANAGEABLE" not in key_ops):
+            logging.debug(
+                "key %s does not have the necessary permissions" % (name,)
+            )
             continue
 
-        pub = pkcs8_to_pub(key['pub_key'])
+        pub = pkcs8_to_pub(key["pub_key"])
         if pub in aedpubs:
             logging.debug("key %s already on AED" % (name,))
             continue
         else:
             logging.debug("key %s not on AED" % (name,))
 
-        kid = key['kid']
-        if ktype == 'RSA':
+        kid = key["kid"]
+        if ktype == "RSA":
             try:
                 data = ska.export_key(kid)
             except SmartKeyException as exc:
@@ -457,8 +468,8 @@ def cmd_skey_sync_keys(args):
                 output_error(msg)
                 continue
 
-            priv = wrap_text_begin_end("RSA PRIVATE KEY", data['value'])
-        elif ktype == 'EC':
+            priv = wrap_text_begin_end("RSA PRIVATE KEY", data["value"])
+        elif ktype == "EC":
             try:
                 data = ska.export_key(kid)
             except SmartKeyException as exc:
@@ -466,9 +477,9 @@ def cmd_skey_sync_keys(args):
                 output_error(msg)
                 continue
 
-            curve_name = key['elliptic_curve']
+            curve_name = key["elliptic_curve"]
             ecparams = get_ec_pem(curve_name)
-            value = wrap_text_begin_end("EC PRIVATE KEY", data['value'])
+            value = wrap_text_begin_end("EC PRIVATE KEY", data["value"])
             priv = "\n".join((ecparams, value))
 
         try:
@@ -513,7 +524,7 @@ def output(data, error=False, indent=0):
             else:
                 print("Error: %s" % (data,), file=sys.stderr)
     else:
-        istr = indent * ' '
+        istr = indent * " "
         if data is not None:
             if isinstance(data, tuple) or isinstance(data, list):
                 if len(data) > 0:
@@ -528,8 +539,11 @@ def output(data, error=False, indent=0):
             elif isinstance(data, dict):
                 for key in sorted(data):
                     val = data[key]
-                    if (isinstance(val, dict) or isinstance(val, tuple)
-                            or isinstance(val, list)):
+                    if (
+                        isinstance(val, dict)
+                        or isinstance(val, tuple)
+                        or isinstance(val, list)
+                    ):
                         print(istr + "%s:" % (key,))
                         output(val, error, indent + indent_step)
                     else:
@@ -560,7 +574,7 @@ def get_handler(name):
     Handlers are all prefixed with cmd_ and named after the command with
     hyphens changing to underscores, i.e. aed-list-keys = cmd_aed_list_keys.
     """
-    fname = "cmd_" + name.lower().replace('-', '_')
+    fname = "cmd_" + name.lower().replace("-", "_")
     handler = globals().get(fname, None)
 
     return handler
@@ -573,14 +587,18 @@ def invoke_handler(progname, args):
     except SmartKeyAuthUserException as exc:
         output_and_exit(exc, error=True)
     except SmartKeyNeedsAcctSelectException as exc:
-        msg = ("%s. Try running '%s skey-login' and including account-id." %
-               (exc, progname))
+        msg = "%s. Try running '%s skey-login' and including account-id." % (
+            exc,
+            progname,
+        )
         output_and_exit(msg, error=True)
     except SmartKeyNeedsAuthException as exc:
         # XXX: Sometimes omitting an account-id causes a generic NeedsAuth
         # so always suggest including account-id for now.
-        msg = ("%s. Try running '%s skey-login' and including account-id." %
-               (exc, progname))
+        msg = "%s. Try running '%s skey-login' and including account-id." % (
+            exc,
+            progname,
+        )
         output_and_exit(msg, error=True)
     except MissingConfigException as exc:
         output_and_exit(exc, error=True)
@@ -596,9 +614,10 @@ def main():
     # -vv enable debug messages like pretty print data used in transactions
     # -vvv like above but also include dump all data sent and received
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--verbose', '-v', action='count', default=0,
-                        help="increase log level)")
-    subparsers = parser.add_subparsers(title='subcommands')
+    parser.add_argument(
+        "--verbose", "-v", action="count", default=0, help="increase log level)"
+    )
+    subparsers = parser.add_subparsers(title="subcommands")
 
     def register_cmd(name, help=None):
         """Register a top-level command."""
@@ -609,113 +628,180 @@ def main():
     #
     # Commands for managing keys on AED
     #
-    subp = register_cmd('aed-delete-key', help="delete a key on AED")
+    subp = register_cmd("aed-delete-key", help="delete a key on AED")
     groupp = subp.add_mutually_exclusive_group()
-    groupp.add_argument('--name', type=str, metavar='STRING')
-    groupp.add_argument('--all', action='store_true')
+    groupp.add_argument("--name", type=str, metavar="STRING")
+    groupp.add_argument("--all", action="store_true")
 
-    subp = register_cmd('aed-import-ec-key', help="Push an RSA key")
-    subp.add_argument('name', type=str, help="name/label for the key")
-    subp.add_argument('--in-file', type=str, metavar='FILE',
-                      help="file with private key and params in PEM format")
+    subp = register_cmd("aed-import-ec-key", help="Push an RSA key")
+    subp.add_argument("name", type=str, help="name/label for the key")
+    subp.add_argument(
+        "--in-file",
+        type=str,
+        metavar="FILE",
+        help="file with private key and params in PEM format",
+    )
 
-    subp = register_cmd('aed-import-rsa-key', help="Push an RSA key")
-    subp.add_argument('name', type=str, help="name/label for the key")
-    subp.add_argument('--in-priv-file', type=str, metavar='FILE',
-                      help="file containing private key in PEM format")
+    subp = register_cmd("aed-import-rsa-key", help="Push an RSA key")
+    subp.add_argument("name", type=str, help="name/label for the key")
+    subp.add_argument(
+        "--in-priv-file",
+        type=str,
+        metavar="FILE",
+        help="file containing private key in PEM format",
+    )
 
-    subp = register_cmd('aed-list-keys', help="list keys on AED")
+    subp = register_cmd("aed-list-keys", help="list keys on AED")
 
     #
     # Commands for managing keys with SmartKey
     #
-    subp = register_cmd('skey-delete-key', 'delete a key from SmartKey')
-    subp.add_argument('--update-aed', action='store_true',
-                      help="also delete the key on AED")
+    subp = register_cmd("skey-delete-key", "delete a key from SmartKey")
+    subp.add_argument(
+        "--update-aed", action="store_true", help="also delete the key on AED"
+    )
     groupp = subp.add_mutually_exclusive_group()
-    groupp.add_argument('--name', type=str, metavar='STRING')
-    groupp.add_argument('--kid', type=str, metavar='UUID')
-    groupp.add_argument('--all', action='store_true')
+    groupp.add_argument("--name", type=str, metavar="STRING")
+    groupp.add_argument("--kid", type=str, metavar="UUID")
+    groupp.add_argument("--all", action="store_true")
 
-    subp = register_cmd('skey-export-key',
-                        help="export a security object from SmartKey")
-    subp.add_argument('kid', type=str, metavar='KID')
-    subp.add_argument('--out-file', type=str, metavar='FILE',
-                      help="File for output in PEM format")
-    subp.add_argument('--out-priv-file', type=str, metavar='FILE',
-                      help="File for private key output in PEM format")
+    subp = register_cmd(
+        "skey-export-key", help="export a security object from SmartKey"
+    )
+    subp.add_argument("kid", type=str, metavar="KID")
+    subp.add_argument(
+        "--out-file",
+        type=str,
+        metavar="FILE",
+        help="File for output in PEM format",
+    )
+    subp.add_argument(
+        "--out-priv-file",
+        type=str,
+        metavar="FILE",
+        help="File for private key output in PEM format",
+    )
     # TODO: put ecparams in out-pub-file
-    subp.add_argument('--out-pub-file', type=str, metavar='FILE',
-                      help="File for public key output in PEM format")
-    subp.add_argument('--out-cert-file', type=str, metavar='FILE',
-                      help="File for cerficate output in PEM format")
+    subp.add_argument(
+        "--out-pub-file",
+        type=str,
+        metavar="FILE",
+        help="File for public key output in PEM format",
+    )
+    subp.add_argument(
+        "--out-cert-file",
+        type=str,
+        metavar="FILE",
+        help="File for cerficate output in PEM format",
+    )
 
-    subp = register_cmd('skey-gen-ec-key',
-                        help="generate an EC key on SmartKey")
-    subp.add_argument('name', type=str, help="name/label for the key")
-    subp.add_argument('curve', type=str,
-                      choices=elliptic_curves,
-                      help="standardized elliptic curve to use")
-    subp.add_argument('--desc', type=str, metavar="STRING",
-                      help="description of EC key")
+    subp = register_cmd(
+        "skey-gen-ec-key", help="generate an EC key on SmartKey"
+    )
+    subp.add_argument("name", type=str, help="name/label for the key")
+    subp.add_argument(
+        "curve",
+        type=str,
+        choices=elliptic_curves,
+        help="standardized elliptic curve to use",
+    )
+    subp.add_argument(
+        "--desc", type=str, metavar="STRING", help="description of EC key"
+    )
     groupp = subp.add_mutually_exclusive_group()
-    groupp.add_argument('--group-id', type=str, metavar='ID',
-                        help="id of group the key should belong to")
+    groupp.add_argument(
+        "--group-id",
+        type=str,
+        metavar="ID",
+        help="id of group the key should belong to",
+    )
     # groupp.add_argument('--group-name', type=str, metavar='NAME',
     #                    help="name of group the key should belong to")
-    subp.add_argument('--update-aed', action='store_true',
-                      help="also push the key to AED")
+    subp.add_argument(
+        "--update-aed", action="store_true", help="also push the key to AED"
+    )
 
-    subp = register_cmd('skey-gen-rsa-key',
-                        help="generate an RSA key on SmartKey")
-    subp.add_argument('name', type=str, help="name/label for the key")
-    subp.add_argument('--size', type=int, metavar='N', default=4096,
-                      help="size of key in bits")
-    subp.add_argument('--desc', type=str, metavar="STRING",
-                      help="description of RSA key")
+    subp = register_cmd(
+        "skey-gen-rsa-key", help="generate an RSA key on SmartKey"
+    )
+    subp.add_argument("name", type=str, help="name/label for the key")
+    subp.add_argument(
+        "--size",
+        type=int,
+        metavar="N",
+        default=4096,
+        help="size of key in bits",
+    )
+    subp.add_argument(
+        "--desc", type=str, metavar="STRING", help="description of RSA key"
+    )
     groupp = subp.add_mutually_exclusive_group()
-    groupp.add_argument('--group-id', type=str, metavar='ID',
-                        help="id of group the key should belong to")
+    groupp.add_argument(
+        "--group-id",
+        type=str,
+        metavar="ID",
+        help="id of group the key should belong to",
+    )
     # groupp.add_argument('--group-name', type=str, metavar='NAME',
     #                    help="name of group the key should belong to")
-    subp.add_argument('--out-priv-file', type=str, metavar='FILE',
-                      help=("file for private key output in PEM format (for "
-                            + " web server)"))
-    subp.add_argument('--out-pub-file', type=str, metavar='FILE',
-                      help=("file for public key output in PEM format (for "
-                            + "CSR)"))
-    subp.add_argument('--update-aed', action='store_true',
-                      help="also push the key to AED")
+    subp.add_argument(
+        "--out-priv-file",
+        type=str,
+        metavar="FILE",
+        help=(
+            "file for private key output in PEM format (for " + " web server)"
+        ),
+    )
+    subp.add_argument(
+        "--out-pub-file",
+        type=str,
+        metavar="FILE",
+        help=("file for public key output in PEM format (for " + "CSR)"),
+    )
+    subp.add_argument(
+        "--update-aed", action="store_true", help="also push the key to AED"
+    )
 
-    subp = register_cmd('skey-list-accounts', help="list accounts on SmartKey")
-    subp = register_cmd('skey-list-groups', help="list groups on SmartKey")
+    subp = register_cmd("skey-list-accounts", help="list accounts on SmartKey")
+    subp = register_cmd("skey-list-groups", help="list groups on SmartKey")
 
-    subp = register_cmd('skey-list-keys',
-                        help="list security objects in SmartKey")
-    subp.add_argument('--debug', action='store_true',
-                      help="list all attributes")
+    subp = register_cmd(
+        "skey-list-keys", help="list security objects in SmartKey"
+    )
+    subp.add_argument(
+        "--debug", action="store_true", help="list all attributes"
+    )
 
-    subp = register_cmd('skey-login',
-                        help="authenticate with SmartKey")
-    subp.add_argument('--username', type=str, metavar='USERNAME',
-                      help="username to login with")
-    subp.add_argument('--password', type=str, metavar='PASSWORD',
-                      help="password for authentication")
+    subp = register_cmd("skey-login", help="authenticate with SmartKey")
+    subp.add_argument(
+        "--username",
+        type=str,
+        metavar="USERNAME",
+        help="username to login with",
+    )
+    subp.add_argument(
+        "--password",
+        type=str,
+        metavar="PASSWORD",
+        help="password for authentication",
+    )
     groupp = subp.add_mutually_exclusive_group()
-    groupp.add_argument('--account-id', type=str, metavar='UUID',
-                        help="select a specific account ID")
+    groupp.add_argument(
+        "--account-id",
+        type=str,
+        metavar="UUID",
+        help="select a specific account ID",
+    )
 
-    subp = register_cmd('skey-logout',
-                        help="terminate session with SmartKey")
+    subp = register_cmd("skey-logout", help="terminate session with SmartKey")
 
-    subp = register_cmd('skey-name-to-kid', help="show the key ID for a key")
-    subp.add_argument('name', type=str, help="name/label for the key")
+    subp = register_cmd("skey-name-to-kid", help="show the key ID for a key")
+    subp.add_argument("name", type=str, help="name/label for the key")
 
-    subp = register_cmd('skey-show-key', help="show details for a key")
-    subp.add_argument('kid', type=str, metavar='KID')
+    subp = register_cmd("skey-show-key", help="show details for a key")
+    subp.add_argument("kid", type=str, metavar="KID")
 
-    subp = register_cmd('skey-sync-keys',
-                        help="push keys from SmartKey to AED")
+    subp = register_cmd("skey-sync-keys", help="push keys from SmartKey to AED")
 
     args = parser.parse_args()
 
@@ -731,5 +817,5 @@ def main():
     invoke_handler(parser.prog, args)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
