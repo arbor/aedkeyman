@@ -1,0 +1,10 @@
+[tool.black]
+line-length = 80
+exclude = '''
+/(
+      \.git
+    | \.aedkeyman.egg-info
+    | \.mypy_cache
+    | \.tox
+)/
+'''
