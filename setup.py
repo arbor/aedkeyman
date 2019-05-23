@@ -8,7 +8,7 @@ with open(path.join(root, "README.md")) as infile:
 
 setup(
     name="aedkeyman",
-    version="0.2",
+    version="0.3",
     packages=["aedkeyman"],
     license="MIT",
     author="Justin Chouinard",
